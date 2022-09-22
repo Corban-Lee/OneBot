@@ -6,7 +6,7 @@ import discord
 from discord import app_commands
 
 from cog import Cog
-from ui import ProfileImage
+from ui import ProfileImage, MakeProfileModal
 from constants import GUILD_ID
 
 
@@ -24,6 +24,15 @@ class Profiles(Cog):
         description='Profile commands...',
         guild_ids=(GUILD_ID,)
     )
+    
+    @profile_group.command(name='create')
+    async def make_profile(self, interaction:discord.Interaction):
+        """
+        Create a profile
+        """
+        modal = MakeProfileModal(interaction)
+        await interaction.response.send_modal(modal)
+        
     
     @app_commands.command(name='member')
     @app_commands.guilds(GUILD_ID)

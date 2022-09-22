@@ -45,13 +45,17 @@ def setup():
         """
     )
     
-    # # Table for profiles
-    # t_debug('user_profiles')
-    # cur.execute(
-    #     """CREATE TABLE IF NOT EXISTS user_profiles (
-    #         user_id INTEGER PRIMARY KEY,
-    #     """
-    # )
+    # Table for profiles
+    t_debug('user_profiles')
+    cur.execute(
+        """CREATE TABLE IF NOT EXISTS user_profiles (
+            user_id INTEGER PRIMARY KEY,
+            level INTEGER NOT NULL,
+            exp INTEGER NOT NULL,
+            banner_colour TEXT NOT NULL
+            )
+        """
+    )
 
     log.debug('Commiting Changes...')
     db.commit()

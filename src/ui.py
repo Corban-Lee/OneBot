@@ -3,6 +3,7 @@ discord UI kit objects.
 """
 
 import json
+import aiosqlite
 import logging
 import textwrap
 import requests
@@ -13,23 +14,61 @@ from typing import Coroutine
 from PIL import Image, ImageDraw, ImageFont
 from io import BytesIO
 
-from constants import AVATAR_SIZE, BANNER_SIZE
+from constants import DATABASE
 
 
 log = logging.getLogger(__name__)
 
 
-class LevelObject:
-    exp: int
-    exp_next: int
-    level: int
-    rank: int
+class MakeProfileModal(ui.Modal):
+    """
+    A view for creating new profile cards
+    """
     
-    def __init__(self, member:discord.Member):
-        self.exp = 0
-        self.exp_next = 0
-        self.level = 0
-        self.rank = 0
+    colour = ui.TextInput(
+        label='Enter your favourite colour\'s hex code',
+        placeholder='#7289da',
+        default='#7289da',
+    )
+
+    def __init__(self, interaction:discord.Member):
+        super().__init__(timeout=180, title='Profile Banner')
+        self.interaction = interaction
+    
+    async def on_submit(self, interaction: Interaction) -> None:
+        """
+        Called when the modal is submitted.
+        """
+        
+        try:
+            discord.Colour.from_str(self.colour.value)
+        except ValueError:
+            await interaction.response.send_message(
+                "Aww man, that's not a valid hex code!\nPlease try again...",
+                ephemeral=True
+            )
+            return
+
+        try:
+            async with aiosqlite.connect(DATABASE) as db:
+                await db.execute_insert(
+                    """
+                    INSERT INTO user_profiles (user_id, level, exp, banner_colour)
+                    VALUES (?, 0, 0, ?)
+                    """,
+                    (interaction.user.id, self.colour.value)
+                )
+                await db.commit()
+        except aiosqlite.IntegrityError:
+            await interaction.response.send_message(
+                "You already have a profile!\nYou can edit it with `/profile edit`",
+                ephemeral=True
+            )
+            return
+
+        await interaction.response.send_message(
+            'Profile created!', ephemeral=True
+        )
 
 
 class ProfileImage:
