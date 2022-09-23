@@ -2,12 +2,13 @@
 Cog for handling tickets.
 """
 
+import aiosqlite
 import discord
 from discord import app_commands
 
 from cog import Cog
 from ui import ProfileImage, MakeProfileModal
-from constants import GUILD_ID
+from constants import GUILD_ID, DATABASE
 
 
 class Profiles(Cog):
@@ -34,8 +35,7 @@ class Profiles(Cog):
         await interaction.response.send_modal(modal)
         
     
-    @app_commands.command(name='member')
-    @app_commands.guilds(GUILD_ID)
+    @profile_group.command(name='member')
     @app_commands.describe(ephemeral='Hide the result from other users?')
     async def get_member_profile(self, interaction:discord.Interaction, member:discord.Member, ephemeral:bool=False):
         """
@@ -44,10 +44,19 @@ class Profiles(Cog):
 
         # This can take a while, so inform the user of that.
         await interaction.response.defer(ephemeral=ephemeral)
+
+        async with aiosqlite.connect(DATABASE) as db:
+            result = await db.execute_fetchall(
+                """
+                SELECT * FROM user_profiles WHERE user_id = ?
+                """,
+                (member.id,)
+            )
+            data = result[0] if result else None
         
         # Get and send the profile image
         profile = ProfileImage(member)
-        await profile.create()
+        await profile.create(data)
         file = discord.File(profile.bytes, filename=f'{member.id}.png')
         await interaction.followup.send(file=file, ephemeral=ephemeral)
 
