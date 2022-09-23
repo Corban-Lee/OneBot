@@ -97,7 +97,7 @@ def setup_logs():
     
     # Mute loud loggers
     update_log_levels(
-        ('discord', 'PIL', 'urllib3'),
+        ('discord', 'PIL', 'urllib3', 'aiosqlite'),
         logging.WARNING
     )
 
