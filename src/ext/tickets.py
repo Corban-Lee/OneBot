@@ -19,18 +19,25 @@ def _check_guild_has_tickets(inter:Inter):
         bool: True if the guild has tickets enabled
     """
 
-    exists = bool(db.execute(
-        "SELECT * FROM purposed_objects WHERE object_id = ? "
-        "AND purpose_id = (SELECT id FROM purposes WHERE name = ?)",
-        inter.guild.id, CategoryPurposes.tickets.value
-    ))
+    err = (
+        "This server does not have tickets enabled."
+        "\nThey can be enabled by purposing a category with the "
+        "name `tickets` if you are an administrator."
+    )
+
+    data = db.column(
+        "SELECT object_id FROM purposed_objects WHERE purpose_id = ?",
+        CategoryPurposes.tickets.value
+    )
+    if not data: 
+        raise app_commands.CheckFailure(err)
+
+    exists = any(channel for channel in inter.guild.channels if channel.id in data)
+
+
 
     if not exists:
-        raise app_commands.CheckFailure(
-            "This server does not have tickets enabled."
-            "\nThey can be enabled by purposing a category with the "
-            "name `tickets` if you are an administrator."
-        )
+        raise app_commands.CheckFailure(err)
 
     return True
 
