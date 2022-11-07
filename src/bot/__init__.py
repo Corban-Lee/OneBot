@@ -132,8 +132,9 @@ class Bot(commands.Bot):
         log.info("Sending logs to all logging channels")
 
         log_channel_ids = db.column(
-            "SELECT channel_id FROM guild_channels WHERE purpose_id = ?",
-            ChannelPurposes.bot_logs.value
+            "SELECT object_id FROM purposed_objects WHERE purpose_id = " 
+            "(SELECT id FROM purposes WHERE name = ?)",
+            ChannelPurposes.botlogs.value
         )
 
         log.debug(

@@ -124,11 +124,7 @@ class Errors(BaseCog, name="errors"):
 				return
 
 			# A different check has failed.
-			await edit(
-				f"`{type(_err).__name__}` : {_err}" \
-				"\nIt's likely that you don't have the required " \
-				"permissions to run this command."
-			)
+			await edit(f"`{type(_err).__name__}` : {_err}")
 		
 		except app_commands.CommandNotFound:
 

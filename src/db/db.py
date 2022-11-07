@@ -85,6 +85,7 @@ def execute(cmd, *vals):
 
     log.debug("Executing command: %s, vals: %s", cmd, vals)
     cur.execute(cmd, tuple(vals))
+    return cur
 
 def multiexec(cmd, valset):
     """Execute multiple commands"""
