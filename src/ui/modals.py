@@ -11,6 +11,31 @@ from discord import ui as dui
 log = logging.getLogger(__name__)
 
 
+class TicketModal(dui.Modal):
+    """Create a new ticket"""
+
+    description = dui.TextInput(
+        label="What can we help you with?",
+        style=discord.TextStyle.long,
+        required=True,
+        placeholder="Please describe your issue"
+    )
+
+    def __init__(self, title:str, callback):
+        super().__init__(title=title)
+        self.callback = callback
+
+    async def on_submit(self, inter:Inter):
+        """Called when the modal is submitted"""
+
+        # Provide the callback with the ticket description
+        # and an interaction to respond to
+        await self.callback(
+            inter=inter,
+            description=self.description.value
+        )
+
+
 class MakeEmbedModal(dui.Modal, title="Create Embed"):
     """Create a custom embed"""
 

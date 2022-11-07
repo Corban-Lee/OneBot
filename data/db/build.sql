@@ -25,48 +25,90 @@ CREATE TABLE IF NOT EXISTS guild_mutes (
     FOREIGN KEY (guild_id) REFERENCES guilds(guild_id) ON DELETE CASCADE
 );
 
--- Channel keys are used by modules in the bot to identify channels
-CREATE TABLE IF NOT EXISTS guild_channel_purposes (
+CREATE TABLE IF NOT EXISTS purpose_types (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
-    name TEXT NOT NULL UNIQUE
+    name TEXT NOT NULL UNIQUE,
+    description TEXT NOT NULL
 );
 
--- Add the default channel keys
-INSERT OR IGNORE INTO guild_channel_purposes (name) VALUES ('general');
-INSERT OR IGNORE INTO guild_channel_purposes (name) VALUES ('announcements');
-INSERT OR IGNORE INTO guild_channel_purposes (name) VALUES ('members_say_welcome');
-INSERT OR IGNORE INTO guild_channel_purposes (name) VALUES ('members_say_goodbye');
-INSERT OR IGNORE INTO guild_channel_purposes (name) VALUES ('bot_logs');
-INSERT OR IGNORE INTO guild_channel_purposes (name) VALUES ('bot_commands');
+INSERT OR IGNORE INTO purpose_types (name, description) VALUES
+    ('category', 'Category'),
+    ('channel', 'Channel'),
+    ('role', 'Role');
 
-CREATE TABLE IF NOT EXISTS guild_channels (
-    channel_id INTEGER PRIMARY KEY,
-    guild_id INTEGER NOT NULL,
+CREATE TABLE IF NOT EXISTS purposes (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    purpose_type_id INTEGER NOT NULL,
+    name TEXT NOT NULL UNIQUE,
+    description TEXT NOT NULL,
+    FOREIGN KEY (purpose_type_id) REFERENCES purpose_types(id) ON DELETE CASCADE
+);
+
+INSERT OR IGNORE INTO purposes (purpose_type_id, name, description) VALUES 
+    ((SELECT id FROM purpose_types WHERE name = 'category'), 'tickets', 'Designated For Tickets'),
+    ((SELECT id FROM purpose_types WHERE name = 'channel'), 'general', 'General Chat'),
+    ((SELECT id FROM purpose_types WHERE name = 'channel'), 'announcements', 'Server Annoucements'),
+    ((SELECT id FROM purpose_types WHERE name = 'channel'), 'rules', 'Server Rules'),
+    ((SELECT id FROM purpose_types WHERE name = 'channel'), 'welcome', 'Member Join Notifications'),
+    ((SELECT id FROM purpose_types WHERE name = 'channel'), 'goodbye', 'Member Leave Notifications'),
+    ((SELECT id FROM purpose_types WHERE name = 'channel'), 'botlogs', 'Logs for Bot Actions'),
+    ((SELECT id FROM purpose_types WHERE name = 'role'), 'member', 'Auto-assigned Member Role'),
+    ((SELECT id FROM purpose_types WHERE name = 'role'), 'muted', 'Muted'),
+    ((SELECT id FROM purpose_types WHERE name = 'role'), 'mod', 'Moderator'),
+    ((SELECT id FROM purpose_types WHERE name = 'role'), 'admin', 'Administrator'),
+    ((SELECT id FROM purpose_types WHERE name = 'role'), 'owner', 'Server Owner'),
+    ((SELECT id FROM purpose_types WHERE name = 'role'), 'birthday', 'Birthday Today');
+
+CREATE TABLE IF NOT EXISTS purposed_objects (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
     purpose_id INTEGER NOT NULL,
-    FOREIGN KEY (guild_id) REFERENCES guilds (guild_id) ON DELETE CASCADE,
-    FOREIGN KEY (purpose_id) REFERENCES guild_channel_purposes(id) ON DELETE CASCADE
+    object_id INTEGER NOT NULL,
+    FOREIGN KEY (purpose_id) REFERENCES purposes(id) ON DELETE CASCADE,
+    UNIQUE (purpose_id, object_id) ON CONFLICT REPLACE
 );
+
+-- -- Channel keys are used by modules in the bot to identify channels
+-- CREATE TABLE IF NOT EXISTS guild_channel_purposes (
+--     id INTEGER PRIMARY KEY AUTOINCREMENT,
+--     name TEXT NOT NULL UNIQUE
+-- );
+
+-- -- Add the default channel keys
+-- INSERT OR IGNORE INTO guild_channel_purposes (name) VALUES ('general');
+-- INSERT OR IGNORE INTO guild_channel_purposes (name) VALUES ('announcements');
+-- INSERT OR IGNORE INTO guild_channel_purposes (name) VALUES ('members_say_welcome');
+-- INSERT OR IGNORE INTO guild_channel_purposes (name) VALUES ('members_say_goodbye');
+-- INSERT OR IGNORE INTO guild_channel_purposes (name) VALUES ('bot_logs');
+-- INSERT OR IGNORE INTO guild_channel_purposes (name) VALUES ('bot_commands');
+
+-- CREATE TABLE IF NOT EXISTS guild_channels (
+--     channel_id INTEGER PRIMARY KEY,
+--     guild_id INTEGER NOT NULL,
+--     purpose_id INTEGER NOT NULL,
+--     FOREIGN KEY (guild_id) REFERENCES guilds (guild_id) ON DELETE CASCADE,
+--     FOREIGN KEY (purpose_id) REFERENCES guild_channel_purposes(id) ON DELETE CASCADE
+-- );
 
 -- 
-CREATE TABLE IF NOT EXISTS guild_role_purposes (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    name TEXT NOT NULL UNIQUE
-);
+-- CREATE TABLE IF NOT EXISTS guild_role_purposes (
+--     id INTEGER PRIMARY KEY AUTOINCREMENT,
+--     name TEXT NOT NULL UNIQUE
+-- );
 
-INSERT OR IGNORE INTO guild_role_purposes (name) VALUES ('member');
-INSERT OR IGNORE INTO guild_role_purposes (name) VALUES ('admin');
-INSERT OR IGNORE INTO guild_role_purposes (name) VALUES ('mod');
-INSERT OR IGNORE INTO guild_role_purposes (name) VALUES ('muted');
-INSERT OR IGNORE INTO guild_role_purposes (name) VALUES ('verified');
-INSERT OR IGNORE INTO guild_role_purposes (name) VALUES ('birthday');
+-- INSERT OR IGNORE INTO guild_role_purposes (name) VALUES ('member');
+-- INSERT OR IGNORE INTO guild_role_purposes (name) VALUES ('admin');
+-- INSERT OR IGNORE INTO guild_role_purposes (name) VALUES ('mod');
+-- INSERT OR IGNORE INTO guild_role_purposes (name) VALUES ('muted');
+-- INSERT OR IGNORE INTO guild_role_purposes (name) VALUES ('verified');
+-- INSERT OR IGNORE INTO guild_role_purposes (name) VALUES ('birthday');
 
-CREATE TABLE IF NOT EXISTS guild_roles (
-    role_id INTEGER PRIMARY KEY,
-    guild_id INTEGER NOT NULL,
-    purpose_id INTEGER NOT NULL,
-    FOREIGN KEY (guild_id) REFERENCES guilds (guild_id) ON DELETE CASCADE,
-    FOREIGN KEY (purpose_id) REFERENCES guild_role_purposes(id) ON DELETE CASCADE
-);
+-- CREATE TABLE IF NOT EXISTS guild_roles (
+--     role_id INTEGER PRIMARY KEY,
+--     guild_id INTEGER NOT NULL,
+--     purpose_id INTEGER NOT NULL,
+--     FOREIGN KEY (guild_id) REFERENCES guilds (guild_id) ON DELETE CASCADE,
+--     FOREIGN KEY (purpose_id) REFERENCES guild_role_purposes(id) ON DELETE CASCADE
+-- );
 
 CREATE TABLE IF NOT EXISTS settings (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -85,3 +127,13 @@ CREATE TABLE IF NOT EXISTS user_settings (
     FOREIGN KEY (setting_id) REFERENCES settings(id) ON DELETE CASCADE,
     UNIQUE (user_id, setting_id)
 );
+
+-- tickets-#36 
+-- Rewrite tickets system
+CREATE TABLE IF NOT EXISTS tickets (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    guild_id INTEGER NOT NULL,
+    member_id INTEGER NOT NULL,
+    description TEXT NOT NULL,
+    FOREIGN KEY (guild_id) REFERENCES guilds(guild_id) ON DELETE CASCADE
+)
