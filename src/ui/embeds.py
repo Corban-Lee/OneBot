@@ -17,6 +17,21 @@ from .views import EmbedPageView
 log = logging.getLogger(__name__)
 
 
+class ManageTicketEmbed(discord.Embed):
+    """Embed for managing a ticket"""
+
+    def __init__(self, ticket_id:int, desc:str, member:discord.Member):
+        super().__init__(
+            title="Manage Ticket",
+            colour=discord.Colour.blurple(),
+            description=f"Ticket ID: {ticket_id}"
+                        f"\nOpened by: {member.mention}"
+        )
+        self.add_field(name="Description of ticket", value=desc, inline=False)
+        self.set_footer(
+            text="IMPORTANT: Closed tickets can be reopened, "
+                 "deleted tickets are gone forever!"
+        )
 
 class WelcomeEmbed(discord.Embed):
     """Welcome embed"""

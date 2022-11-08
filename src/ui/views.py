@@ -4,10 +4,69 @@ import logging
 from typing import Coroutine
 
 import discord
-from discord import Interaction as Inter
+from discord import (
+    Interaction as Inter,
+    ui as dui,
+    ButtonStyle
+)
+
+from db import db
 
 
 log = logging.getLogger(__name__)
+
+
+class ManageTicketView(dui.View):
+    """View for managing a ticket"""
+
+    def __init__(self, ticket_id:int):
+        super().__init__(timeout=None)
+        self.ticket_id = ticket_id
+
+    @dui.button(
+        label=" Close Ticket ",
+        style=ButtonStyle.secondary,
+        emoji="🔒"
+    )
+    async def close_ticket(self, inter:Inter, button:dui.Button):
+        """Close the ticket. A closed ticket can be reopened"""
+
+        db.execute(
+            "UPDATE tickets SET active = 0 WHERE id = ?",
+            self.ticket_id
+        )
+
+        try:
+            await inter.channel.delete(reason="Ticket closed")
+        except discord.Forbidden:
+            await inter.response.send_message(
+                "I do not have permission to delete this channel"
+                "\nPlease delete it manually.",
+                ephemeral=True
+            )
+
+    @dui.button(
+        label=" Permanently Delete Ticket ",
+        style=ButtonStyle.danger
+    )
+    async def delete_ticket(self, inter:Inter, button:dui.Button):
+        """Delete the ticket. A deleted ticket cannot be reopened"""
+
+        db.execute(
+            "DELETE FROM tickets WHERE id = ?",
+            self.ticket_id
+        )
+
+        try:
+            await inter.channel.delete(reason="Ticket deleted")
+        except discord.Forbidden:
+            await inter.response.send_message(
+                "I do not have permission to delete this channel"
+                "\nPlease delete it manually.",
+                ephemeral=True
+            )
+
+
 
 
 class ExpClusterView(discord.ui.View):
