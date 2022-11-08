@@ -250,7 +250,17 @@ class TicketsCog(BaseCog, name="Tickets"):
                     read_messages=False,
                     read_message_history=False,
                     view_channel=False
-                )
+                ),
+                member.guild.me: PermissionOverwrite(
+                    read_messages=True,
+                    use_application_commands=True,
+                    read_message_history=True,
+                    view_channel=True,
+                    add_reactions=True,
+                    embed_links=True,
+                    attach_files=True,
+                    external_emojis=True
+                ),
             }
         )
         return channel
