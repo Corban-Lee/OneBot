@@ -15,7 +15,8 @@ from .embeds import (
     HelpSetPronounsEmbed,
     HelpGetPronounsEmbed,
     WelcomeEmbed,
-    RemoveEmbed
+    RemoveEmbed,
+    ManageTicketEmbed
 )
-from .views import EmbedPageView, ExpClusterView
+from .views import EmbedPageView, ExpClusterView, ManageTicketView
 from .levelcards import LevelCard, ScoreBoard, LevelUpCard
