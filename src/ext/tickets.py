@@ -7,12 +7,13 @@ from discord import (
     Interaction as Inter,
     CategoryChannel,
     PermissionOverwrite,
-    Member
+    Member,
+    Role
 )
 from tabulate import tabulate
 
 from db import db
-from db.enums import CategoryPurposes
+from db.enums import CategoryPurposes, RolePurposes
 from ui import TicketModal, ManageTicketEmbed, ManageTicketView
 from exceptions import EmptyQueryResult
 from . import BaseCog
@@ -158,7 +159,7 @@ class TicketsCog(BaseCog, name="Tickets"):
 
 
     @app_commands.command(name="ticket")
-    #@app_commands.checks.cooldown(1, 300, key=lambda inter: (inter.guild.id, inter.user.id))
+    @app_commands.checks.cooldown(1, 300, key=lambda inter: (inter.guild.id, inter.user.id))
     @app_commands.check(_check_guild_has_tickets)
     async def new_ticket_cmd(self, inter:Inter):
         """Create a new ticket"""
@@ -225,26 +226,63 @@ class TicketsCog(BaseCog, name="Tickets"):
         )
 
         for category_id in category_ids:
-            category = await self.bot.get.channel(category_id)
+            category: CategoryChannel = await self.bot.get.channel(category_id)
             if category.guild.id == member.guild.id:
                 break
         else:
             raise EmptyQueryResult
 
+        overwrites = {}
+        access_overwrite = PermissionOverwrite(
+            read_messages=True,
+            use_application_commands=True,
+            read_message_history=True,
+            view_channel=True,
+            add_reactions=True,
+            embed_links=True,
+            attach_files=True,
+            external_emojis=True
+        )
+
+        # get the admin and moderator roles to add to the channel perms
+        admin_role_ids = db.column(
+            "SELECT object_id FROM purposed_objects WHERE "
+            "purpose_id = ?",
+            RolePurposes.admin.value
+        )
+
+        for admin_role_id in admin_role_ids:
+            admin_role: Role = await self.bot.get.role(admin_role_id, member.guild.id)
+            if admin_role.guild.id == member.guild.id:
+                overwrites[admin_role] = access_overwrite
+                break
+
+        # TODO: make a util function for this repeated code
+        mod_role_ids = db.column(
+            "SELECT object_id FROM purposed_objects WHERE "
+            "purpose_id = ?",
+            RolePurposes.mod.value
+        )
+
+        for mod_role_id in mod_role_ids:
+            mod_role: Role = await self.bot.get.role(mod_role_id, member.guild.id)
+            if mod_role.guild.id == member.guild.id:
+                overwrites[mod_role] = access_overwrite
+                break
+
+        overwrites[member] = access_overwrite
+        overwrites[member.guild.me] = access_overwrite
+        overwrites[member.guild.default_role] = PermissionOverwrite(
+            read_messages=False,
+            read_message_history=False,
+            view_channel=False
+        )
+
         # Create the channel and ensure that the ticket creator has access
         channel = await category.create_text_channel(
             name=f"ticket-{ticket_id}",
             topic=f"Ticket #{ticket_id}",
-            overwrites={member: PermissionOverwrite(
-                read_messages=True,
-                use_application_commands=True,
-                read_message_history=True,
-                view_channel=True,
-                add_reactions=True,
-                embed_links=True,
-                attach_files=True,
-                external_emojis=True
-            )}
+            overwrites=overwrites
         )
         return channel
 
