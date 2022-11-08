@@ -158,7 +158,7 @@ class TicketsCog(BaseCog, name="Tickets"):
 
 
     @app_commands.command(name="ticket")
-    #@app_commands.checks.cooldown(1, 300, key=lambda inter: (inter.guild.id, inter.user.id))
+    @app_commands.checks.cooldown(1, 300, key=lambda inter: (inter.guild.id, inter.user.id))
     @app_commands.check(_check_guild_has_tickets)
     async def new_ticket_cmd(self, inter:Inter):
         """Create a new ticket"""
@@ -225,7 +225,7 @@ class TicketsCog(BaseCog, name="Tickets"):
         )
 
         for category_id in category_ids:
-            category = await self.bot.get.channel(category_id)
+            category: CategoryChannel = await self.bot.get.channel(category_id)
             if category.guild.id == member.guild.id:
                 break
         else:
@@ -235,16 +235,23 @@ class TicketsCog(BaseCog, name="Tickets"):
         channel = await category.create_text_channel(
             name=f"ticket-{ticket_id}",
             topic=f"Ticket #{ticket_id}",
-            overwrites={member: PermissionOverwrite(
-                read_messages=True,
-                use_application_commands=True,
-                read_message_history=True,
-                view_channel=True,
-                add_reactions=True,
-                embed_links=True,
-                attach_files=True,
-                external_emojis=True
-            )}
+            overwrites={
+                member: PermissionOverwrite(
+                    read_messages=True,
+                    use_application_commands=True,
+                    read_message_history=True,
+                    view_channel=True,
+                    add_reactions=True,
+                    embed_links=True,
+                    attach_files=True,
+                    external_emojis=True
+                ),
+                member.guild.default_role: PermissionOverwrite(
+                    read_messages=False,
+                    read_message_history=False,
+                    view_channel=False
+                )
+            }
         )
         return channel
 
