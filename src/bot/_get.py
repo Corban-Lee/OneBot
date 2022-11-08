@@ -28,6 +28,20 @@ class Get:
         guild_obj = self.bot.get_guild(_id)
         return guild_obj or await self.bot.fetch_guild(_id)
 
+    async def role(self, role_id, guild_id, /) -> discord.Role | None:
+        """Get a discord Role object from an ID.
+
+        Args:
+            id (int): The ID of the role.
+        Returns:
+            discord.Role: The role object.
+            None: If the role is not found.
+        """
+
+        log.debug('Getting role object')
+        guild_obj = await self.guild(guild_id)
+        role_obj = guild_obj.get_role(role_id)
+        return role_obj
 
     async def channel(self, _id:int, /) -> discord.TextChannel | None:
         """Get a discord channel object from an ID.
