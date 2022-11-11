@@ -16,6 +16,7 @@ from db import db
 from db.enums import CategoryPurposes, RolePurposes
 from ui import TicketModal, ManageTicketEmbed, ManageTicketView
 from exceptions import EmptyQueryResult
+from constants import NO_TICKETS_ERR
 from . import BaseCog
 
 
@@ -88,7 +89,7 @@ class TicketsCog(BaseCog, name="Tickets"):
         table = tabulate(tickets_data, headers=("ID", "MemberID", "Active"))
 
         await inter.response.send_message(
-            f"```{table}```",
+            content=f"```{table}```",
             ephemeral=True
         )
 
@@ -270,8 +271,13 @@ class TicketsCog(BaseCog, name="Tickets"):
                 overwrites[mod_role] = access_overwrite
                 break
 
+        # Grant access to the ticket opener
         overwrites[member] = access_overwrite
+
+        # Grant access to the bot
         overwrites[member.guild.me] = access_overwrite
+
+        # Revokes access from everyone else
         overwrites[member.guild.default_role] = PermissionOverwrite(
             read_messages=False,
             read_message_history=False,

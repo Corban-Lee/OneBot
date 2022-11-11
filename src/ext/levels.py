@@ -54,7 +54,7 @@ class LevelCog(BaseCog, name='Level Progression'):
             member.id, member.guild.id
         ).delete()
 
-    def gain_exp(self, member:discord.Member, amount:int) -> None | bool:
+    def gain_exp(self, member:discord.Member, amount:int) -> None | tuple:
         """Gives the given member the given amount of exp
 
         Args:
