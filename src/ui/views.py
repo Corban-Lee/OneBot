@@ -45,10 +45,12 @@ class ManageTicketView(dui.View):
     async def close_ticket(self, inter:Inter, button:dui.Button):
         """Close the ticket. A closed ticket can be reopened"""
 
-        db.execute(
-            "UPDATE tickets SET active = 0 WHERE id = ?",
-            self._ticket_id
-        )
+        if not self._deleting:
+            db.execute(
+                "UPDATE tickets SET active = 0 WHERE id = ?",
+                self._ticket_id
+            )
+
         await self.delete_ticket_channel(inter)
 
     @dui.button(
@@ -59,10 +61,12 @@ class ManageTicketView(dui.View):
     async def delete_ticket(self, inter:Inter, button:dui.Button):
         """Delete the ticket. A deleted ticket cannot be reopened"""
 
-        db.execute(
-            "DELETE FROM tickets WHERE id = ?",
-            self._ticket_id
-        )
+        if not self._deleting:
+            db.execute(
+                "DELETE FROM tickets WHERE id = ?",
+                self._ticket_id
+            )
+
         await self.delete_ticket_channel(inter)
 
     async def delete_ticket_channel(self, inter:Inter):
