@@ -112,5 +112,6 @@ CREATE TABLE IF NOT EXISTS tickets (
     member_id INTEGER NOT NULL,
     description TEXT NOT NULL,
     active INTEGER NOT NULL DEFAULT 1,
+    timestamp INTEGER NOT NULL,
     FOREIGN KEY (guild_id) REFERENCES guilds(guild_id) ON DELETE CASCADE
 )
