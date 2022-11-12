@@ -1,7 +1,9 @@
 """Views for the bot"""
 
 import logging
+import asyncio
 from typing import Coroutine
+from datetime import datetime, timedelta
 
 import discord
 from discord import (
@@ -18,6 +20,9 @@ log = logging.getLogger(__name__)
 
 class ManageTicketView(dui.View):
     """View for managing a ticket"""
+
+    __slots__ = ("_ticket_id",)
+    _deleting:bool = False
 
     def __init__(self, ticket_id:int):
         super().__init__(timeout=None)
@@ -44,15 +49,7 @@ class ManageTicketView(dui.View):
             "UPDATE tickets SET active = 0 WHERE id = ?",
             self._ticket_id
         )
-
-        try:
-            await inter.channel.delete(reason="Ticket closed")
-        except discord.Forbidden:
-            await inter.response.send_message(
-                "I do not have permission to delete this channel"
-                "\nPlease delete it manually.",
-                ephemeral=True
-            )
+        await self.delete_ticket_channel(inter)
 
     @dui.button(
         label=" Permanently Delete Ticket ",
@@ -66,17 +63,57 @@ class ManageTicketView(dui.View):
             "DELETE FROM tickets WHERE id = ?",
             self._ticket_id
         )
+        await self.delete_ticket_channel(inter)
 
-        try:
-            await inter.channel.delete(reason="Ticket deleted")
-        except discord.Forbidden:
+    async def delete_ticket_channel(self, inter:Inter):
+        """Delete the ticket channel when we are done with it"""
+
+        # Flag that we are deleting the ticket
+        # Prevents buttons from being used twice
+        if self._deleting:
             await inter.response.send_message(
-                "I do not have permission to delete this channel"
-                "\nPlease delete it manually.",
+                "You can't close/delete the ticket twice!",
                 ephemeral=True
             )
+            return
 
+        self._deleting = True
 
+        log.debug(
+            "Attempting to delete ticket channel %s from %s",
+            inter.channel.name, inter.guild.name
+        )
+
+        # Seconds until the channel is deleted
+        seconds = 10
+
+        # Get a timestamp for when the channel will be deleted
+        delete_at_timestamp = int((
+            datetime.now() + timedelta(seconds=seconds+1)
+        ).timestamp())
+
+        # Send a message informing the user that the channel
+        # will be deleted
+        await inter.response.send_message(
+            "Ticket closed or deleted."
+            "\nThis channel will be deleted "
+            f"<t:{delete_at_timestamp}:R>"
+        )
+        await asyncio.sleep(seconds)
+        await inter.delete_original_response()
+
+        # Try to delete the channel
+        # If we can't delete the channel, log the error
+        try:
+            await inter.channel.delete(reason="Ticket deleted")
+            log.debug("Channel deleted")
+
+        except discord.Forbidden as err:
+            log.error(err)
+            await inter.followup.send(
+                "I do not have permission to delete this channel"
+                "\nPlease delete it manually."
+            )
 
 
 class ExpClusterView(discord.ui.View):

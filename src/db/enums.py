@@ -5,6 +5,9 @@ from enum import Enum
 from db import db
 
 
+# using a dynamic value for the enum name is not good practice.
+# TODO: fix
+
 # Settings
 _settings_data = db.records("SELECT id, safe_name FROM settings")
 _settings_map = {name: _id for _id, name in _settings_data}
