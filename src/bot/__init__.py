@@ -12,6 +12,7 @@ from discord.ext import commands, tasks
 
 from db import db
 from db.enums import ChannelPurposes
+from ui import ManageTicketView
 from ._get import Get
 from ._logs import setup_logs
 from ._ext import CogManager
@@ -171,6 +172,16 @@ class Bot(commands.Bot):
         # )
 
         # log.info("Removed guild %s from the database", guild.name)
+
+    async def setup_hook(self) -> None:
+
+        active_ticket_ids = db.column(
+            "Select id FROM tickets WHERE active = ?",
+            1
+        )
+
+        for ticket_id in active_ticket_ids:
+            self.add_view(ManageTicketView(ticket_id))
 
     async def on_ready(self) -> None:
         """Handles tasks that require the bot to be ready first.
