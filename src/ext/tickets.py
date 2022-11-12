@@ -1,7 +1,9 @@
 """Extension for the ticket system"""
 
 import logging
+from datetime import datetime
 
+import discord
 from discord import (
     app_commands,
     Interaction as Inter,
@@ -16,6 +18,7 @@ from db import db
 from db.enums import CategoryPurposes, RolePurposes
 from ui import TicketModal, ManageTicketEmbed, ManageTicketView
 from exceptions import EmptyQueryResult
+from constants import NO_TICKETS_ERR
 from . import BaseCog
 
 
@@ -28,18 +31,12 @@ def _check_guild_has_tickets(inter:Inter):
         bool: True if the guild has tickets enabled
     """
 
-    err = (
-        "This server does not have tickets enabled."
-        "\nThey can be enabled by purposing a category with the "
-        "name `tickets` if you are an administrator."
-    )
-
     data = db.column(
         "SELECT object_id FROM purposed_objects WHERE purpose_id = ?",
         CategoryPurposes.tickets.value
     )
     if not data: 
-        raise app_commands.CheckFailure(err)
+        raise app_commands.CheckFailure(NO_TICKETS_ERR)
 
     exists = any(
         channel for channel in inter.guild.channels
@@ -47,7 +44,7 @@ def _check_guild_has_tickets(inter:Inter):
     )
 
     if not exists:
-        raise app_commands.CheckFailure(err)
+        raise app_commands.CheckFailure(NO_TICKETS_ERR)
 
     return True
 
@@ -88,7 +85,100 @@ class TicketsCog(BaseCog, name="Tickets"):
         table = tabulate(tickets_data, headers=("ID", "MemberID", "Active"))
 
         await inter.response.send_message(
-            f"```{table}```",
+            content=f"```{table}```",
+            ephemeral=True
+        )
+
+    @app_commands.command(name="clean-ticket-channels")
+    @app_commands.check(_check_guild_has_tickets)
+    @app_commands.default_permissions(moderate_members=True)
+    async def clean_ticket_channels_cmd(self, inter:Inter):
+        """Clean up all ticket channels that are not in the database"""
+
+        log.debug("Cleaning up ticket channels in %s", inter.guild.name)
+        await inter.response.defer(ephemeral=True)
+
+        tickets_data = db.records(
+            "SELECT id, active FROM tickets WHERE guild_id = ?",
+            inter.guild.id
+        )
+        if not tickets_data:
+            log.debug("No tickets found, cancelling")
+            await inter.followup.send(
+                "I could not find any tickets",
+                ephemeral=True
+            )
+            return
+
+        log.debug(
+            "Found %s tickets, sorting by active",
+            len(tickets_data)
+        )
+
+        # sort the tickets by their active status
+        active_ticket_ids = []
+        inactive_ticket_ids = []
+        for ticket_id, active in tickets_data:
+            if active:
+                active_ticket_ids.append(ticket_id)
+
+            inactive_ticket_ids.append(ticket_id)
+
+        log.debug("Getting tickets category")
+
+        category_id = db.field(
+            "SELECT object_id FROM purposed_objects WHERE purpose_id = ?",
+            CategoryPurposes.tickets.value
+        )
+        category = await self.bot.get.channel(category_id)
+        if not category:
+            log.debug("Could not find tickets category, cancelling")
+            await inter.followup.send(
+                "I could not find the ticket category",
+                ephemeral=True
+            )
+
+        log.debug("Checking channels")
+
+        async def try_delete_channel(channel):
+            try:
+                await channel.delete(reason="Cleaning up ticket channels")
+                log.debug("Deleted channel %s", channel.name)
+
+            except discord.Forbidden:
+                log.error(
+                    "I do not have permission to delete channel %s "
+                    "in guild %s",
+                    channel.name, inter.guild.id
+                )
+
+        deleted = 0
+        for i, channel in enumerate(category.channels):
+
+            try:
+                channel_number = int(channel.name.split("-")[-1])
+            except ValueError:
+                log.debug(
+                    "Channel %s is not a ticket channel",
+                    channel.name
+                )
+                continue
+
+            if channel_number not in active_ticket_ids:
+                await try_delete_channel(channel)
+                deleted += 1
+
+            else:
+                log.debug(
+                    "Channel %s is an active ticket channel, skipping",
+                    channel.name
+                )
+
+        log.debug("Finished cleaning up ticket channels")
+
+        await inter.followup.send(
+            f"Found **{i+1}** total channels"
+            f"\nDeleted **{deleted}** inactive or ticketless channels",
             ephemeral=True
         )
 
@@ -104,8 +194,8 @@ class TicketsCog(BaseCog, name="Tickets"):
 
         # Check if the ticket exists
         ticket_data = db.record(
-            "SELECT id, member_id, description, active FROM tickets WHERE id = ? "
-            "AND guild_id = ?",
+            "SELECT id, member_id, description, active, timestamp "
+            " FROM tickets WHERE id = ? AND guild_id = ?",
             ticket_id, inter.guild.id
         )
         if not ticket_data:
@@ -115,7 +205,7 @@ class TicketsCog(BaseCog, name="Tickets"):
             )
             return
 
-        _id, member_id, description, active = ticket_data
+        _id, member_id, description, active, timestamp = ticket_data
         assert _id == ticket_id  # Sanity check (should never fail)
 
         # Check if the ticket is already active
@@ -141,7 +231,8 @@ class TicketsCog(BaseCog, name="Tickets"):
             embed=ManageTicketEmbed(
                 ticket_id=ticket_id,
                 desc=description,
-                member=member
+                member=member,
+                timestamp=datetime.fromtimestamp(timestamp)
             ),
             view=ManageTicketView(ticket_id)
         )
@@ -170,25 +261,31 @@ class TicketsCog(BaseCog, name="Tickets"):
         ):
             """Create a new ticket"""
 
-            db.execute(
+            now = datetime.now()
+            timestamp = int(now.timestamp())
+
+            cur = db.execute(
                 "INSERT INTO tickets "
-                "(guild_id, member_id, description)  VALUES (?, ?, ?)",
+                "(guild_id, member_id, description, timestamp)  "
+                "VALUES (?, ?, ?, ?)",
                 inter.guild.id,
                 inter.user.id,
-                description
-            )
-            _id = db.field(
-                "SELECT last_insert_rowid() FROM tickets WHERE "
-                "guild_id = ? AND member_id = ? AND description = ?",
-                inter.guild.id,
-                inter.user.id,
-                description
+                description,
+                timestamp
             )
 
-            channel = await self.create_ticket_channel(ticket_id=_id, member=inter.user)
+            channel = await self.create_ticket_channel(
+                ticket_id=cur.lastrowid,
+                member=inter.user
+            )
             await channel.send(
-                embed=ManageTicketEmbed(ticket_id=_id, desc=description, member=inter.user),
-                view=ManageTicketView(ticket_id=_id)
+                embed=ManageTicketEmbed(
+                    ticket_id=cur.lastrowid,
+                    desc=description,
+                    member=inter.user,
+                    timestamp=now  # datetime object needed
+                ),
+                view=ManageTicketView(ticket_id=cur.lastrowid)
             )
 
             await inter.response.send_message(
@@ -270,8 +367,13 @@ class TicketsCog(BaseCog, name="Tickets"):
                 overwrites[mod_role] = access_overwrite
                 break
 
+        # Grant access to the ticket opener
         overwrites[member] = access_overwrite
+
+        # Grant access to the bot
         overwrites[member.guild.me] = access_overwrite
+
+        # Revokes access from everyone else
         overwrites[member.guild.default_role] = PermissionOverwrite(
             read_messages=False,
             read_message_history=False,

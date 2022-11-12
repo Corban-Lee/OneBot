@@ -29,12 +29,17 @@ LOGS = 'logs/'
 LOG_FILENAME_FORMAT_PREFIX = '%Y-%m-%d %H-%M-%S'
 MAX_LOGFILE_AGE_DAYS = 7
 
-# Levelboard constants
-# colours
+# Levelcard constants
 BLACK = "#0F0F0F"
 WHITE = "#F9F9F9"
 DARK_GREY = "#2F2F2F"
 LIGHT_GREY = "#9F9F9F"
-#fonts
 POPPINS = Font.poppins(size=70)
 POPPINS_SMALL = Font.poppins(size=50)
+
+# Messages/Words
+ACTIVITY = "/help"
+NO_TICKETS_ERR = "This server does not have tickets enabled." \
+                 "\nThey can be enabled by purposing a category for " \
+                 "tickets if you have the manage channels permission."
+

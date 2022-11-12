@@ -20,18 +20,29 @@ log = logging.getLogger(__name__)
 class ManageTicketEmbed(discord.Embed):
     """Embed for managing a ticket"""
 
-    def __init__(self, ticket_id:int, desc:str, member:discord.Member):
+    def __init__(
+        self,
+        ticket_id:int,
+        desc:str,
+        member:discord.Member,
+        timestamp:datetime
+    ):
+
+        int_timestamp = int(timestamp.timestamp())
+
         super().__init__(
             title="Manage Ticket",
             colour=discord.Colour.blurple(),
-            description=f"Ticket ID: {ticket_id}"
-                        f"\nOpened by: {member.mention}"
+            timestamp=timestamp,
+            description=f"Ticket number **{ticket_id}**"
+                        f"\nOpened by {member.mention}"
+                        f"\nOpened on **<t:{int_timestamp}:F>**"
+                        f"\n\n**Message from {member}**\n{desc}"
+                        "\n\n**IMPORTANT:**\n*Closed tickets can be "
+                        "reopened, deleted tickets are gone forever!*"
         )
-        self.add_field(name="Description of ticket", value=desc, inline=False)
-        self.set_footer(
-            text="IMPORTANT: Closed tickets can be reopened, "
-                 "deleted tickets are gone forever!"
-        )
+        self.set_thumbnail(url=member.display_avatar.url)
+
 
 class WelcomeEmbed(discord.Embed):
     """Welcome embed"""

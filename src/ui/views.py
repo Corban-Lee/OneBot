@@ -21,19 +21,28 @@ class ManageTicketView(dui.View):
 
     def __init__(self, ticket_id:int):
         super().__init__(timeout=None)
-        self.ticket_id = ticket_id
+        self._ticket_id = ticket_id
+
+        # Add the ticket id to the buttons, otherwise closing/deleting
+        # a ticket will close/delete the wrong ticket.
+        for button in self.children:
+            if not isinstance(button, dui.Button):
+                raise AttributeError("All children must be buttons")
+
+            button.custom_id += str(ticket_id)
 
     @dui.button(
         label=" Close Ticket ",
         style=ButtonStyle.secondary,
-        emoji="🔒"
+        emoji="🔒",
+        custom_id="manage_ticket:close:"
     )
     async def close_ticket(self, inter:Inter, button:dui.Button):
         """Close the ticket. A closed ticket can be reopened"""
 
         db.execute(
             "UPDATE tickets SET active = 0 WHERE id = ?",
-            self.ticket_id
+            self._ticket_id
         )
 
         try:
@@ -47,14 +56,15 @@ class ManageTicketView(dui.View):
 
     @dui.button(
         label=" Permanently Delete Ticket ",
-        style=ButtonStyle.danger
+        style=ButtonStyle.danger,
+        custom_id="manage_ticket:delete:"
     )
     async def delete_ticket(self, inter:Inter, button:dui.Button):
         """Delete the ticket. A deleted ticket cannot be reopened"""
 
         db.execute(
             "DELETE FROM tickets WHERE id = ?",
-            self.ticket_id
+            self._ticket_id
         )
 
         try:

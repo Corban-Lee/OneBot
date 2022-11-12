@@ -1,0 +1,13 @@
+{
+    "configurations": [
+        {
+            "name": "Python: Onebot",
+            "type": "python",
+            "request": "launch",
+            "program": "${workspaceFolder}/src/main.py",
+            "args": ["--debug"],
+            "console": "integratedTerminal",
+            "justMyCode": true
+        }
+    ]
+}
