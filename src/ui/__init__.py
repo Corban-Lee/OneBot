@@ -7,16 +7,12 @@ from .embeds import (
     CelebrateBirthdayEmbed,
     HelpChannelsEmbed,
     EmbedPageManager,
-    ExpClusterEmbed,
-    ClaimedExpClusterEmbed,
-    SetChannelEmbed,
-    ListConfiguredChannelsEmbed,
-    ListMutedEmbed,
     HelpSetPronounsEmbed,
     HelpGetPronounsEmbed,
     WelcomeEmbed,
     RemoveEmbed,
-    ManageTicketEmbed
+    ManageTicketEmbed,
+    AddedTrackEmbed
 )
-from .views import EmbedPageView, ExpClusterView, ManageTicketView
+from .views import EmbedPageView, ExpClusterView, ManageTicketView, MusicControlView, TrackAddedView
 from .levelcards import LevelCard, ScoreBoard, LevelUpCard

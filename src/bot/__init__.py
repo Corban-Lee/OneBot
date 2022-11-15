@@ -44,8 +44,7 @@ class Bot(commands.Bot):
 
         super().__init__(
             command_prefix="ob ",
-            intents=discord.Intents.all(),
-            help_command=None
+            intents=discord.Intents.all()
         )
 
         self.get: Get = Get(self)

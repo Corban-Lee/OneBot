@@ -18,6 +18,65 @@ from db import db
 log = logging.getLogger(__name__)
 
 
+# MUSIC COMMAND VIEWS ############################################################
+
+class TrackAddedView(dui.View):
+    """View for the track added message, has controls for managing the 
+    added track in the queue"""
+
+    __slots__ = ()
+
+    def __init__(self, song, voice_state):
+        super().__init__(timeout=300)
+        self.song = song
+        self.voice_state = voice_state
+
+    @dui.button(label="Play Now", style=ButtonStyle.green)
+    async def play_now(self, inter:Inter, button:dui.Button):
+        await inter.response.send_message("dummy")
+
+    @dui.button(label="Remove from Queue", style=ButtonStyle.red)
+    async def remove_from_queue(self, inter:Inter, button:dui.Button):
+        await inter.response.send_message("dummy")
+
+    @dui.button(label="Get Media Controls", style=ButtonStyle.secondary)
+    async def get_media_controls(self, inter:Inter, button:dui.Button):
+        await inter.response.send_message("dummy")
+    
+
+class MusicControlView(dui.View):
+    """View for music control buttons"""
+
+    __slots__ = ("song_id",)
+
+    # TODO: layout 3 rows
+    # 1st row: backward, resume/pause, forward
+    # 2nd row: mute/unmute, volume down, volume up
+    # 3rd row: loop, stop, shuffle
+
+    def __init__(self, song_id: int):
+        super().__init__(timeout=300)
+        self.song_id = song_id
+
+    @dui.button(label="⏮️ Rewind", style=ButtonStyle.secondary)
+    async def rewind(self, inter:Inter, button:dui.Button):
+        await inter.response.send_message("dummy")
+
+    @dui.button(label="⏯️ Play/Pause", style=ButtonStyle.secondary)
+    async def pause_resume(self, inter:Inter, button:dui.Button):
+        await inter.response.send_message("dummy")
+
+    @dui.button(label="⏭️ Forward", style=ButtonStyle.secondary)
+    async def forward(self, inter:Inter, button:dui.Button):
+        await inter.response.send_message("dummy")
+
+    @dui.button(label="⏹️ Stop", style=ButtonStyle.secondary)
+    async def stop(self, inter:Inter, button:dui.Button):
+        await inter.response.send_message("dummy")
+
+###################################################################################
+
+
 class ManageTicketView(dui.View):
     """View for managing a ticket"""
 

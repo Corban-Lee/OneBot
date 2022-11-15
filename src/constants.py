@@ -39,6 +39,7 @@ POPPINS_SMALL = Font.poppins(size=50)
 
 # Messages/Words
 ACTIVITY = "/help"
+SKIP_SONG_MESSAGE = "I skipped the song for you :thumbsup:"
 NO_TICKETS_ERR = "This server does not have tickets enabled." \
                  "\nThey can be enabled by purposing a category for " \
                  "tickets if you have the manage channels permission."
