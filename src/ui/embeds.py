@@ -22,8 +22,6 @@ log = logging.getLogger(__name__)
 class NowPlayingEmbed(discord.Embed):
     """Embed for when a track starts playing"""
 
-    __slots__ = ()
-
     def __init__(self, song):
 
         log.debug("Creating NowPlayingEmbed")
