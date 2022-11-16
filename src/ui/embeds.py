@@ -19,6 +19,31 @@ log = logging.getLogger(__name__)
 
 # MUSIC COMMAND EMBEDS ############################################################
 
+class NowPlayingEmbed(discord.Embed):
+    """Embed for when a track starts playing"""
+
+    __slots__ = ()
+
+    def __init__(self, song):
+
+        log.debug("Creating NowPlayingEmbed")
+
+        super().__init__(
+            title="Now Playing",
+            colour=discord.Colour.blurple()
+        )
+
+        self.set_thumbnail(url=song.source.thumbnail)
+
+        self.description = (
+            f"[**{song.source.title}**]({song.source.url})"
+
+            f"\n\n**By** [{song.source.uploader}]({song.source.uploader_url})"
+            f"\n**Requested by:** {song.source.requester.mention}"
+            f"\n**Duration:** *{song.source.parsed_duration}*"
+        )
+
+
 class AddedTrackEmbed(discord.Embed):
     """Embed displayed when a track is added to the queue"""
 
@@ -42,7 +67,7 @@ class AddedTrackEmbed(discord.Embed):
         # Get the estimated time the track will play
         time_until_played = self._get_time_until_played(song, voice_state)
 
-        desc = (
+        self.description = (
             f"[**{song.source.title}**]({song.source.url})"
 
             f"\n\n**By** [{song.source.uploader}]({song.source.uploader_url})"
@@ -52,8 +77,6 @@ class AddedTrackEmbed(discord.Embed):
             f"\n**Position in queue:** {position}"
             f"\n**Will play:** {time_until_played}"
         )
-
-        self.description = desc
 
     def _get_time_until_played(self, song, voice_state) -> str:
         """Get the time until the song will be played

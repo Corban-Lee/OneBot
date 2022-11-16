@@ -15,7 +15,7 @@ from discord import (
 )
 import youtube_dl
 
-from ui import AddedTrackEmbed, TrackAddedView
+from ui import AddedTrackEmbed, TrackAddedView, NowPlayingEmbed, MusicControlView
 from exceptions import VoiceError, YTDLError
 from constants import SKIP_SONG_MESSAGE
 from . import BaseCog
@@ -222,21 +222,9 @@ class Song:
         self.source = source
         self.requester = source.requester
 
-    def create_embed(self):
-        embed = (
-            discord.Embed(
-                title='Now playing',
-                description=f'```css\n{self.source.title}\n```',
-                color=discord.Color.blurple()
-            )
-            .add_field(name='Duration', value=self.source.parsed_duration)
-            .add_field(name='Requested by', value=self.requester.mention)
-            .add_field(name='Uploader', value=f'[{self.source.uploader}]({self.source.uploader_url})')
-            .add_field(name='URL', value=f'[Click]({self.source.url})')
-            .set_thumbnail(url=self.source.thumbnail)
-        )
-
-        return embed
+    @property
+    def embed(self):
+        return discord.Embed(title="Song - (dummy embed)", description=f"**{self.source.title}**", color=discord.Color.blurple())
 
 class SongQueue(asyncio.Queue):
     """Queue that holds songs"""
@@ -351,8 +339,10 @@ class VoiceControls:
 
             self.current.source.volume = self._volume
             self.voice.play(self.current.source, after=self.play_next_song)
-            await self.current.source.channel.send("playing now: " + self.current.source.title)
-
+            await self.current.source.channel.send(
+                embed=NowPlayingEmbed(self.current),
+                view=MusicControlView(id(self.current))
+            )
             await self.next.wait()
 
     def play_next_song(self, error=None):
@@ -490,9 +480,14 @@ class MusicCog(BaseCog, name="New Music"):
 
         state = self.get_voice_state(inter)
 
+        if not state.is_playing:
+            return await inter.response.send_message(
+                "I'm not playing anything right now."
+            )
+
         # Send an embed for the currently playing song
         await inter.response.send_message(
-            embed=state.current.create_embed()
+            embed=state.current.embed
         )
 
     @group.command(name="queue")
