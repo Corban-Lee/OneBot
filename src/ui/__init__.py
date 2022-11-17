@@ -13,7 +13,8 @@ from .embeds import (
     RemoveEmbed,
     ManageTicketEmbed,
     AddedTrackEmbed,
-    NowPlayingEmbed
+    NowPlayingEmbed,
+    MusicQueueEmbed
 )
 from .views import EmbedPageView, ExpClusterView, ManageTicketView, MusicControlView, TrackAddedView
 from .levelcards import LevelCard, ScoreBoard, LevelUpCard

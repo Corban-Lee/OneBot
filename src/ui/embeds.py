@@ -19,6 +19,22 @@ log = logging.getLogger(__name__)
 
 # MUSIC COMMAND EMBEDS ############################################################
 
+class MusicQueueEmbed(discord.Embed):
+    """Embed for showing the music queue"""
+
+    def __init__(
+        self,
+        description: str,
+        current_page: int,
+        total_pages: int
+    ):
+        super().__init__(
+            description=description,
+            color=discord.Color.blurple()
+        )
+        self.set_footer(text=f"Page {current_page}/{total_pages}")
+
+
 class NowPlayingEmbed(discord.Embed):
     """Embed for when a track starts playing"""
 
@@ -31,14 +47,17 @@ class NowPlayingEmbed(discord.Embed):
             colour=discord.Colour.blurple()
         )
 
-        self.set_thumbnail(url=song.source.thumbnail)
+        # Shorthand for the source object
+        src = song.source
+
+        self.set_thumbnail(url=src.thumbnail)
 
         self.description = (
-            f"[**{song.source.title}**]({song.source.url})"
+            f"[**{src.title}**]({src.url})"
 
-            f"\n\n**By** [{song.source.uploader}]({song.source.uploader_url})"
-            f"\n**Requested by:** {song.source.requester.mention}"
-            f"\n**Duration:** *{song.source.parsed_duration}*"
+            f"\n\n**By** [{src.uploader}]({src.uploader_url})"
+            f"\n**Requested by:** {src.requester.mention}"
+            f"\n**Duration:** *{src.parsed_duration}*"
         )
 
 
@@ -56,15 +75,15 @@ class AddedTrackEmbed(discord.Embed):
 
         self.set_thumbnail(url=song.source.thumbnail)
 
-        # Determine position in queue
-        if voice_state.queue[0] == song and voice_state.current is None:
-            position = "Now Playing"
-        else:
-            position = voice_state.queue.index(song) + 1
+        # Get the song's position in the queue
+        position = voice_state.queue.index(song) + 1 
 
-        # Get the estimated time the track will play
-        time_until_played = self._get_time_until_played(song, voice_state)
+        # Get the estimated time the song will play
+        time_until_played = self._get_time_until_played(
+            song, voice_state
+        )
 
+        # Set the embed's description
         self.description = (
             f"[**{song.source.title}**]({song.source.url})"
 
@@ -93,20 +112,11 @@ class AddedTrackEmbed(discord.Embed):
 
         log.debug("Getting time until song will be played")
 
-        # If the song is the first in the queue and there is no
-        # current song: The current song must be playing.
-        if (
-            voice_state.queue[0] == song
-            and
-            voice_state.current is None
-        ):
-            log.debug("Song is first in queue and no current song")
-            return "Now Playing"
-
         # If the song is the first in the queue and there is a
         # current song: The song will be played after the current.
-        if voice_state.queue[0] == song and voice_state.current:
+        if voice_state.queue[0] == song:
             log.debug("Song is first in queue and there is a current song")
+
             if voice_state.current.source.duration == 0:
                 log.debug("Current song is a livestream")
                 return "*Unknown because a livestream is playing*"
@@ -116,16 +126,11 @@ class AddedTrackEmbed(discord.Embed):
             )
             return f"<t:{int(est_time.timestamp())}:R>"
 
-        # NOTE:
-        # from here it should be safe to assume that the song
-        # is not the first in the queue and that there is a
-        # current song playing. If this fails... fuck.
-        assert voice_state.current is not None, "No current song playing"
-
         # Get the duration of all songs in the queue before the
         # passed song.
         duration_sum = voice_state.current.source.duration
-        if duration_sum == 0:
+
+        if not duration_sum:
             log.debug("livesteam in queue, cant calculate duration")
             return "*Unknown because a livestream is playing*"
 
@@ -133,7 +138,7 @@ class AddedTrackEmbed(discord.Embed):
 
             # There is a livestream in the queue before the song.
             # The duration of the song cannot be calculated.
-            if track.source.duration == 0 and track != song:
+            if not track.source.duration and track != song:
                 log.debug("livesteam in queue, cant calculate duration")
                 return "*Unknown because a livestream is in the queue*"
 
