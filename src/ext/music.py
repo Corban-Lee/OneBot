@@ -11,7 +11,8 @@ from async_timeout import timeout
 import discord
 from discord import (
     app_commands,
-    Interaction as Inter
+    Interaction as Inter,
+    VoiceClient
 )
 import youtube_dl
 
@@ -194,10 +195,11 @@ class YTDLSource(discord.PCMVolumeTransformer):
             while info is None:
                 try:
                     info = processed_info['entries'].pop(0)
-                except IndexError:
+                except IndexError as err:
                     raise YTDLError(
-                        f"Couldn't retrieve any matches for `{webpage_url}`"
-                    )
+                        "Couldn't retrieve any matches for "
+                        f"`{webpage_url}`"
+                    ) from err
 
         log.debug("Creating FFmpeg source for %s", search)
 
@@ -211,7 +213,7 @@ class YTDLSource(discord.PCMVolumeTransformer):
         )
 
     @property
-    def parsed_duration(self):
+    def parsed_duration(self) -> str:
         """Parses the duration of a song"""
 
         duration = self.duration
@@ -236,6 +238,8 @@ class YTDLSource(discord.PCMVolumeTransformer):
         return ', '.join(duration_list)
 
 class Song:
+    """A class to represent a song"""
+
     __slots__ = ('source', 'requester')
 
     def __init__(self, source: YTDLSource):
@@ -245,40 +249,53 @@ class Song:
         self.source = source
         self.requester = source.requester
 
-    @property
-    def embed(self):
-        return discord.Embed(title="Song - (dummy embed)", description=f"**{self.source.title}**", color=discord.Color.blurple())
 
 class SongQueue(asyncio.Queue):
     """Queue that holds songs"""
 
     def __getitem__(self, item):
         if isinstance(item, slice):
-            return list(itertools.islice(self._queue, item.start, item.stop, item.step))
-        else:
-            return self._queue[item]
+            return list(itertools.islice(
+                self._queue,
+                item.start,
+                item.stop,
+                item.step
+            ))
 
-    def __iter__(self):
+        return self._queue[item]
+
+    def __iter__(self):  # pylint: disable=non-iterator-returned
         return self._queue.__iter__()
 
-    def __len__(self):
+    def __len__(self) -> int:
         return self.qsize()
 
-    def index(self, song:Song):
+    def index(self, song:Song) -> int:
+        """Returns the index of a song in the queue"""
+
         return self._queue.index(song)
 
-    def __contains__(self, song:Song):
-        print("checking contains", song in self._queue)
-        print(song, self._queue)
+    def __contains__(self, song:Song) -> bool:
         return song in self._queue
 
-    def clear(self):
+    def rotate(self, index: int) -> None:
+        """Rotates a song to the top of the queue"""
+
+        self._queue.rotate(index)
+
+    def clear(self) -> None:
+        """Clears the queue"""
+
         self._queue.clear()
 
-    def shuffle(self):
+    def shuffle(self) -> None:
+        """Shuffles the queue"""
+
         random.shuffle(self._queue)
 
-    def remove(self, index: int):
+    def remove(self, index: int) -> None:
+        """Removes a song from the queue"""
+
         del self._queue[index]
 
 class VoiceControls:
@@ -306,7 +323,7 @@ class VoiceControls:
         self.inter = inter
 
         self.current = None
-        self.voice = None
+        self.voice: VoiceClient = None
         self.next = asyncio.Event()
         self.queue = SongQueue()
 
@@ -316,30 +333,40 @@ class VoiceControls:
 
         self.audio_player = bot.loop.create_task(self.audio_player_task())
 
-    def __del__(self):
+    def __del__(self) -> None:
         self.audio_player.cancel()
 
     @property
-    def loop(self):
+    def loop(self) -> bool:
+        """Returns the loop status"""
+
         return self._loop
 
     @loop.setter
-    def loop(self, value: bool):
+    def loop(self, value: bool) -> None:
+        """Sets the loop status"""
+
         self._loop = value
 
     @property
-    def volume(self):
+    def volume(self) -> float:
+        """Returns the volume"""
+
         return self._volume
 
     @volume.setter
-    async def volume(self, value: float):
+    async def volume(self, value: float) -> None:
+        """Sets the volume"""
+
         self._volume = value
 
     @property
-    def is_playing(self):
+    def is_playing(self) -> bool:
+        """Returns True if the voice client is playing"""
+
         return self.voice and self.current
 
-    async def audio_player_task(self):
+    async def audio_player_task(self) -> None:
         """Background task that handles the audio player"""
 
         log.debug("Starting audio player task")
@@ -350,16 +377,18 @@ class VoiceControls:
             if not self.loop:
                 self.current = None
                 try:
-                    async with timeout(180): # 3min
+
+                    # Get the next song or timeout in 3 minutes
+                    async with timeout(180):
                         log.debug("fetching song from queue")
                         self.current = await self.queue.get()
+
                 except asyncio.TimeoutError:
-                    log.debug("TimeoutError: no song in queue?")
+                    log.debug("TimeoutError: no song in queue")
                     self.bot.loop.create_task(self.stop())
                     return
 
             log.debug("Playing song %s", self.current.source.title)
-            print(type(self.current.source), type(self.voice))
 
             self.current.source.volume = self._volume
             self.voice.play(self.current.source, after=self.play_next_song)
@@ -387,7 +416,7 @@ class VoiceControls:
         if not 0 <= index < len(self.queue):
             raise VoiceError(f"Song #{index} does not exist.")
 
-        self.queue._queue.rotate(-index)
+        self.queue.rotate(-index)
         self.skip()
 
     def skip(self):
@@ -422,7 +451,7 @@ class MusicCog(BaseCog, name="New Music"):
         guild_only=True
     )
 
-    def cog_unload(self) -> None:
+    async def cog_unload(self) -> None:
         """Cleanup when cog is unloaded"""
 
         for state in self.voice_states.values():
@@ -477,13 +506,14 @@ class MusicCog(BaseCog, name="New Music"):
     async def join_vc(self, inter: Inter) -> None:
         """Join the voice channel of the user who invoked the command"""
 
-        vc = inter.user.voice.channel
+        voice_channel = inter.user.voice.channel
         voice_state = self.get_voice_state(inter)
 
         if inter.guild.voice_client:
-            await inter.guild.voice_client.move_to(vc)
-        else:
-            voice_state.voice = await vc.connect()
+            await inter.guild.voice_client.move_to(voice_channel)
+            return
+
+        voice_state.voice: VoiceClient = await voice_channel.connect()
 
     @group.command(name="join")
     @app_commands.check(check_member_in_vc)
@@ -564,10 +594,7 @@ class MusicCog(BaseCog, name="New Music"):
         for i, song in enumerate(voice_state.queue[start:end], start=start):
             output += f"{i+1}. [{song.source.title}]({song.source.url})\n"
 
-        log.debug(
-            "Finished creating queue output. "
-            f"({pages=}, {start=}, {end=}, {len(voice_state.queue)=})"
-        )
+        log.debug("Finished creating queue output")
 
         embed = MusicQueueEmbed(
             description=output,
@@ -629,7 +656,7 @@ class MusicCog(BaseCog, name="New Music"):
                 MUSIC_ALREADYVOTEDTOSKIP
             )
 
-    @app_commands.command(name="pause")
+    @group.command(name="pause")
     @app_commands.check(check_member_in_vc)
     async def pause_cmd(self, inter:Inter):
         """Pauses the currently playing song"""
@@ -644,7 +671,7 @@ class MusicCog(BaseCog, name="New Music"):
         voice_state.voice.pause()
         await inter.response.send_message(MUSIC_PAUSED)
 
-    @app_commands.command(name="resume")
+    @group.command(name="resume")
     @app_commands.check(check_member_in_vc)
     async def resume_cmd(self, inter:Inter):
         """Resumes the currently playing song"""
@@ -659,7 +686,7 @@ class MusicCog(BaseCog, name="New Music"):
         voice_state.voice.resume()
         await inter.response.send_message(MUSIC_RESUMED)
 
-    @app_commands.command(name="stop")
+    @group.command(name="stop")
     @app_commands.check(check_member_in_vc)
     @app_commands.default_permissions(move_members=True)
     async def stop_cmd(self, inter:Inter):
@@ -671,22 +698,20 @@ class MusicCog(BaseCog, name="New Music"):
         voice_state.queue.clear()
 
         if voice_state.is_playing:
-            voice_state.stop()
+            await voice_state.stop()
 
         await inter.response.send_message(MUSIC_STOPPED)
 
 
 
-    # @group.command(name="loop")
-    # @app_commands.check(check_member_in_vc)
+    @group.command(name="loop")
+    @app_commands.check(check_member_in_vc)
     async def loop_cmd(self, inter:Inter, loop:bool):
-        """BROKEN: Loops the currently playing song
+        """Loops the currently playing song
 
         Args:
             loop (bool): True if the song should loop
         """
-
-        # TODO: fix this
 
         voice_state = self.get_voice_state(inter)
 
