@@ -3,6 +3,7 @@
 import sqlite3
 import logging
 
+import discord
 from discord import (
     app_commands,
     Interaction as Inter
@@ -14,23 +15,62 @@ from . import BaseCog
 
 log = logging.getLogger(__name__)
 
-settings = [
+user_settings = [
     app_commands.Choice(name=name, value=_id)
     for _id, name in db.records(
-        "SELECT id, name FROM settings"
+        "SELECT id, name FROM settings_options "
+        "WHERE is_guild_setting = 0"
     )
 ]
 
-class SettingsCog(BaseCog, name="User Settings"):
+guild_settings = [
+    app_commands.Choice(name=name, value=_id)
+    for _id, name in db.records(
+        "SELECT id, name FROM settings_options "
+        "WHERE is_guild_setting = 1"
+    )
+]
+
+
+class SettingsCog(BaseCog, name="User/Guild Settings"):
     """Cog for user settings"""
 
-    group = app_commands.Group(
-        name="settings",
+    user_group = app_commands.Group(
+        name="options",
         description="User settings"
     )
 
-    @group.command(name="set")
-    @app_commands.choices(setting=settings)
+    guild_group = app_commands.Group(
+        name="server-options",
+        description="Server settings",
+        guild_only=True,
+        default_permissions=discord.Permissions(administrator=True)
+    )
+
+    @user_group.command(name="update")
+    @app_commands.choices(option=user_settings)
+    async def update_cmd(
+        self,
+        inter:Inter,
+        option:app_commands.Choice[int],
+        value:str
+    ):
+        """Update your user settings for the bot"""
+        await inter.response.send_message("dummy")
+
+    @guild_group.command(name="update")
+    @app_commands.choices(option=guild_settings)
+    async def update_cmd(
+        self,
+        inter:Inter,
+        option:app_commands.Choice[int],
+        value:str
+    ):
+        """Update the server's settings for the bot"""
+        await inter.response.send_message("dummy")
+
+    # @group.command(name="change")
+    @app_commands.choices(setting=user_settings)
     async def set_setting_cmd(
         self,
         inter:Inter,
@@ -75,7 +115,7 @@ class SettingsCog(BaseCog, name="User Settings"):
             ephemeral=True
         )
 
-    @group.command(name="see")
+    # @group.command(name="see")
     async def see_settings_cmd(self, inter:Inter):
         """See your current settings"""
 

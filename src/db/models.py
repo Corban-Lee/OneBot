@@ -180,16 +180,16 @@ class MemberLevelModel:
 
 class UserSettings:
 
-    def get(user_id:int, setting:Enum) -> bool:
+    def get(user_id:int, option:Enum) -> bool:
         """Get a user setting"""
 
         log.debug("Getting user setting")
 
         try:
             return bool(db.field(
-                "SELECT value FROM user_settings "
-                "WHERE user_id = ? AND setting_id = ?",
-                user_id, setting.value
+                "SELECT value FROM settings_options "
+                "WHERE object_id = ? AND option_id = ?",
+                user_id, option.value
             ))
         except sqlite3.IntegrityError:
             log.debug("Setting not found")

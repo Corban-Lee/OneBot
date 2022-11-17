@@ -9,9 +9,9 @@ from db import db
 # TODO: fix
 
 # Settings
-_settings_data = db.records("SELECT id, safe_name FROM settings")
+_settings_data = db.records("SELECT id, name FROM settings_options")
 _settings_map = {name: _id for _id, name in _settings_data}
-UserSettingsNames = Enum("UserSettingsNames", _settings_map)
+SettingsOptions = Enum("SettingsOptions", _settings_map)
 
 # Category Purposes
 _cat_purposes_data = db.records(
@@ -19,7 +19,7 @@ _cat_purposes_data = db.records(
     "(SELECT id FROM purpose_types WHERE name = 'category')"
 )
 _cat_purposes_map = {name: _id for _id, name in _cat_purposes_data}
-CategoryPurposes = Enum("RolePurposes", _cat_purposes_map)
+CategoryPurposes = Enum("CategoryPurposes", _cat_purposes_map)
 
 # Channel Purposes
 _channel_purposes_data = db.records(

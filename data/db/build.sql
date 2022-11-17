@@ -79,30 +79,80 @@ CREATE TABLE IF NOT EXISTS purposed_objects (
     UNIQUE (purpose_id, object_id) ON CONFLICT REPLACE
 );
 
--- Settings
--- TODO: rename to config options
+-- Settings --------------------------------------------------------------------
+
+CREATE TABLE IF NOT EXISTS settings_options (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    name TEXT NOT NULL UNIQUE,
+    description TEXT NOT NULL,
+    default_value TEXT NOT NULL,
+    is_guild_setting INTEGER NOT NULL DEFAULT 0
+);
+
+INSERT OR IGNORE INTO settings_options (name, description, default_value, is_guild_setting) VALUES
+    ("lvl_alert", "Level Up Alert", "1", 0),
+    ("join_msg", "Member Join Message", "Welcome to the server!", 1),
+    ("leave_msg", "Member Leave Message", "Goodbye!", 1);
+
+CREATE TABLE IF NOT EXISTS settings_value_types (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    option_id INTEGER NOT NULL,
+    name TEXT NOT NULL UNIQUE,
+    value TEXT NOT NULL,
+    FOREIGN KEY (option_id) REFERENCES settings_options(id) ON DELETE CASCADE
+);
+
+
+-- use these as values, if none are found then it's a string input type
+INSERT OR IGNORE INTO settings_value_types (option_id, name, value) VALUES
+    ((SELECT id FROM settings_options WHERE name = "lvl_alert"), "enabled", "1"),
+    ((SELECT id FROM settings_options WHERE name = "lvl_alert"), "disabled", "0");
+
 CREATE TABLE IF NOT EXISTS settings (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
-    safe_name TEXT NOT NULL UNIQUE,
-    name TEXT NOT NULL,
-    description TEXT
-    --for_user INTEGER NOT NULL  -- 0 = guild, 1 = user
+    object_id INTEGER NOT NULL UNIQUE, -- Guild ID or User ID
+    option_id INTEGER NOT NULL,
+    value TEXT NOT NULL,
+    FOREIGN KEY (option_id) REFERENCES settings_options(id) ON DELETE CASCADE,
+    UNIQUE (object_id, option_id) ON CONFLICT REPLACE
 );
 
--- Add default settings here
-INSERT OR IGNORE INTO settings (safe_name, name, description) VALUES 
-    ('lvl_alert', 'Level Up Alert', 'Send a message when you level up.');
+-- CREATE TABLE IF NOT EXISTS setting_data_types (
+--     id INTEGER PRIMARY KEY AUTOINCREMENT,
+--     name TEXT NOT NULL UNIQUE
+-- );
 
--- Table to store the settings
--- TODO: rename to config values
-CREATE TABLE IF NOT EXISTS user_settings (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    user_id INTEGER NOT NULL,
-    setting_id INTEGER NOT NULL,
-    value INTEGER NOT NULL,
-    FOREIGN KEY (setting_id) REFERENCES settings(id) ON DELETE CASCADE,
-    UNIQUE (user_id, setting_id)
-);
+-- INSERT OR IGNORE INTO setting_data_types (name) VALUES
+--     ('boolean'),
+--     ('integer'),
+--     ('string');
+
+-- -- Settings
+-- -- TODO: rename to config options
+-- CREATE TABLE IF NOT EXISTS settings (
+--     id INTEGER PRIMARY KEY AUTOINCREMENT,
+--     safe_name TEXT NOT NULL UNIQUE,
+--     name TEXT NOT NULL,
+--     description TEXT
+--     --for_user INTEGER NOT NULL  -- 0 = guild, 1 = user
+-- );
+
+-- -- Add default settings here
+-- INSERT OR IGNORE INTO settings (safe_name, name, description) VALUES 
+--     ('lvl_alert', 'Level Up Alert', 'Send a message when you level up.');
+
+-- -- Table to store the settings
+-- -- TODO: rename to config values
+-- CREATE TABLE IF NOT EXISTS user_settings (
+--     id INTEGER PRIMARY KEY AUTOINCREMENT,
+--     user_id INTEGER NOT NULL,
+--     setting_id INTEGER NOT NULL,
+--     value INTEGER NOT NULL,
+--     FOREIGN KEY (setting_id) REFERENCES settings(id) ON DELETE CASCADE,
+--     UNIQUE (user_id, setting_id)
+-- );
+
+--------------------------------------------------------------------------------
 
 -- tickets-#36 - Rewrite tickets system
 -- Store user created tickets

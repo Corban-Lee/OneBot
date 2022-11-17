@@ -9,7 +9,7 @@ from discord import Interaction as Inter
 from discord.ext import commands
 
 from db import db, MemberLevelModel, UserSettings
-from db.enums import UserSettingsNames
+from db.enums import SettingsOptions
 from ui import LevelCard, ScoreBoard, LevelUpCard
 from utils import is_bot_owner
 from exceptions import EmptyQueryResult
@@ -107,7 +107,7 @@ class LevelCog(BaseCog, name='Level Progression'):
 
         before, after = levels
         if after > before and UserSettings.get(
-            member.id, UserSettingsNames.lvl_alert
+            member.id, SettingsOptions.lvl_alert
         ):
             await message.reply("GG! You've advanced to level %s" % after)
 
