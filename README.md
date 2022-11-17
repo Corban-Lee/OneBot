@@ -23,14 +23,10 @@ Download ffmpeg from [here](https://www.gyan.dev/ffmpeg/builds/ffmpeg-git-full.7
 ## Development Plans
 
 - [x] Redesign the database code
-- [ ] Add a custom help command
-- [ ] Create a customizable and detailed user profile system
-- [ ] Add a command to allow users to add their own roles
-- [ ] Add an automated warn system
-- [ ] Add a cog that will pull memes from the internet and post them in the server
 - [x] Implement music playback for voice channels
 - [x] Create a ticket system for users to request help from staff
 - [x] Create a ticket system for users to suggest new server features
 - [x] Refine the ticket system to be cleaner and easy to use
 - [x] Automate the celebration of user birthdays
 - [x] Create tools to easily load, unload and reload cogs
+- See [issues](https://github.com/XordK/OneBot/issues)
