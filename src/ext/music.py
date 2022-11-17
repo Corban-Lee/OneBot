@@ -15,9 +15,32 @@ from discord import (
 )
 import youtube_dl
 
-from ui import AddedTrackEmbed, TrackAddedView, NowPlayingEmbed, MusicControlView
+from ui import (
+    AddedTrackEmbed,
+    TrackAddedView,
+    NowPlayingEmbed,
+    MusicQueueEmbed
+)
 from exceptions import VoiceError, YTDLError
-from constants import SKIP_SONG_MESSAGE
+from constants import (
+    MUSIC_CANTLEAVEVC,
+    MUSIC_USERNOTINVC,
+    MUSIC_NOTPLAYING,
+    MUSIC_QUEUEEMPTY,
+    MUSIC_BOTDIFFVC,
+    MUSIC_JOINEDVC,
+    MUSIC_LEFTVC,
+    MUSIC_SKIPPEDSONG,
+    MUSIC_SKIPVOTEREGISTERED,
+    MUSIC_ALREADYVOTEDTOSKIP,
+    MUSIC_RESUMED,
+    MUSIC_PAUSED,
+    MUSIC_STOPPED,
+    MUSIC_LOOPING,
+    MUSIC_NOTLOOPING,
+    MUSIC_ADDEDPLAYSOON,
+    INVALID_PAGE_NUMBER
+)
 from . import BaseCog
 
 
@@ -325,6 +348,7 @@ class VoiceControls:
             self.next.clear()
 
             if not self.loop:
+                self.current = None
                 try:
                     async with timeout(180): # 3min
                         log.debug("fetching song from queue")
@@ -341,7 +365,7 @@ class VoiceControls:
             self.voice.play(self.current.source, after=self.play_next_song)
             await self.current.source.channel.send(
                 embed=NowPlayingEmbed(self.current),
-                view=MusicControlView(id(self.current))
+                # view=MusicControlView(self)
             )
             await self.next.wait()
 
@@ -354,6 +378,17 @@ class VoiceControls:
             raise VoiceError(str(error))
 
         self.next.set()
+
+    def skip_to_song(self, index: int):
+        """Skips to a song in the queue"""
+
+        log.debug("Skipping to song %s", index)
+
+        if not 0 <= index < len(self.queue):
+            raise VoiceError(f"Song #{index} does not exist.")
+
+        self.queue._queue.rotate(-index)
+        self.skip()
 
     def skip(self):
         """Skips the current song"""
@@ -416,19 +451,28 @@ class MusicCog(BaseCog, name="New Music"):
         """
 
         if not inter.user.voice or not inter.user.voice.channel:
-            raise app_commands.CheckFailure(
-                "You are not in a voice channel, "
-                "join one and try again."
-            )
+            raise app_commands.CheckFailure(MUSIC_USERNOTINVC)
 
         if inter.guild.voice_client:
             if inter.guild.voice_client.channel != inter.user.voice.channel:
-                raise app_commands.CheckFailure(
-                    "The bot is already in a different voice channel, "
-                    "join that channel and try again."
-                )
+                raise app_commands.CheckFailure(MUSIC_BOTDIFFVC)
 
         return True
+
+    async def check_is_playing(self, inter:Inter) -> bool:
+        """Check if the bot is currently playing a song
+
+        Returns:
+            bool: True if the bot is playing a song
+        Raises:
+            app_commands.CheckFailure: If the bot is not playing a song
+        """
+
+        if not self.get_voice_state(inter).check_playing:
+            raise app_commands.CheckFailure(MUSIC_NOTPLAYING)
+
+        return True
+
 
     async def join_vc(self, inter: Inter) -> None:
         """Join the voice channel of the user who invoked the command"""
@@ -447,9 +491,7 @@ class MusicCog(BaseCog, name="New Music"):
         """Joins the current voice channel"""
 
         await self.join_vc(inter)
-        await inter.response.send_message(
-            "I'm here! Use `/music play <url>` to play a song.",
-        )
+        await inter.response.send_message(MUSIC_JOINEDVC)
 
     @group.command(name="leave")
     @app_commands.default_permissions(move_members=True)
@@ -458,36 +500,30 @@ class MusicCog(BaseCog, name="New Music"):
         """Leaves the current voice channel"""
 
         if not inter.guild.voice_client:
-            await inter.response.send_message(
-                "I can't leave a voice channel if I'm not in one, "
-                "you can use the join command to make me join one."
-            )
+            await inter.response.send_message(MUSIC_CANTLEAVEVC)
             return
-
 
         voice_state = self.get_voice_state(inter)
         await voice_state.stop()
         del self.voice_states[inter.guild.id]
     
-        await inter.response.send_message(
-            "I've left the vc, bye bye :wave:",
-        )
+        await inter.response.send_message(MUSIC_LEFTVC)
 
     @group.command(name="currently-playing")
     @app_commands.check(check_member_in_vc)
     async def currently_playing_cmd(self, inter:Inter):
         """Shows the currently playing song"""
 
-        state = self.get_voice_state(inter)
+        voice_state = self.get_voice_state(inter)
 
-        if not state.is_playing:
-            return await inter.response.send_message(
-                "I'm not playing anything right now."
-            )
+        if not voice_state.is_playing:
+            await inter.response.send_message(MUSIC_NOTPLAYING)
+            return
 
         # Send an embed for the currently playing song
         await inter.response.send_message(
-            embed=state.current.embed
+            embed=NowPlayingEmbed(voice_state.current),
+            # view=MusicControlView(voice_state)
         )
 
     @group.command(name="queue")
@@ -506,10 +542,8 @@ class MusicCog(BaseCog, name="New Music"):
 
         # Check if the queue is empty first
         if len(voice_state.queue) == 0:
-            return await inter.response.send_message(
-                "The queue is empty, use `/music play <url>` "
-                "to add a song."
-            )
+            await inter.response.send_message(MUSIC_QUEUEEMPTY)
+            return
 
         # Determine the amount of pages
         items_per_page = 10
@@ -518,7 +552,7 @@ class MusicCog(BaseCog, name="New Music"):
         # Check that the input page number is valid
         if page not in range(1, pages + 1):
             return await inter.response.send_message(
-                f"Invalid page number, there is/are {pages} page(s)."
+                INVALID_PAGE_NUMBER.format(pages)
             )
 
         # Get the items index range for the page
@@ -526,7 +560,7 @@ class MusicCog(BaseCog, name="New Music"):
         end = start + items_per_page
 
         # Create an output string containing the page info
-        output = ""
+        output = f"**Music Queue - {len(voice_state.queue)} tracks**\n\n"
         for i, song in enumerate(voice_state.queue[start:end], start=start):
             output += f"{i+1}. [{song.source.title}]({song.source.url})\n"
 
@@ -535,9 +569,11 @@ class MusicCog(BaseCog, name="New Music"):
             f"({pages=}, {start=}, {end=}, {len(voice_state.queue)=})"
         )
 
-        # Create an embed for the page
-        embed = (discord.Embed(description='**{} tracks:**\n\n{}'.format(len(voice_state.queue), output))
-                 .set_footer(text='Viewing page {}/{}'.format(page, pages)))
+        embed = MusicQueueEmbed(
+            description=output,
+            current_page=page,
+            total_pages=pages
+        )
         await inter.response.send_message(embed=embed)
 
     @group.command(name="skip")
@@ -553,15 +589,13 @@ class MusicCog(BaseCog, name="New Music"):
         # Check that there is a song playing
         if not voice_state.is_playing:
             log.debug("No song is playing")
-            return await inter.response.send_message(
-                "I'm not playing anything right now."
-                "\nUse `/music play <url>` to play a song."
-            )
+            await inter.response.send_message(MUSIC_NOTPLAYING)
+            return
 
         # Allow the requester or admins to skip the song
         if inter.user == voice_state.current.requester or \
             inter.user.guild_permissions.administrator:
-            await inter.response.send_message(SKIP_SONG_MESSAGE)
+            await inter.response.send_message(MUSIC_SKIPPEDSONG)
             voice_state.skip()
 
             log.debug(
@@ -578,7 +612,7 @@ class MusicCog(BaseCog, name="New Music"):
 
             # We can skip the song if we have 3 votes
             if total_votes >= 3:
-                await inter.response.send_message(SKIP_SONG_MESSAGE)
+                await inter.response.send_message(MUSIC_SKIPPEDSONG)
                 voice_state.skip()
 
                 log.debug("3 votes reached. The song has been skipped")
@@ -586,18 +620,65 @@ class MusicCog(BaseCog, name="New Music"):
             # Not enough votes, tell the user how many more are needed
             else:
                 await inter.response.send_message(
-                    "Your vote to skip has been registered, "
-                    f"{total_votes}/3 votes"
+                    MUSIC_SKIPVOTEREGISTERED.format(3-total_votes)
                 )
 
         # The only other option is that the user has already voted
         else:
             await inter.response.send_message(
-                "You have already voted to skip this song."
+                MUSIC_ALREADYVOTEDTOSKIP
             )
 
-    @group.command(name="loop")
+    @app_commands.command(name="pause")
     @app_commands.check(check_member_in_vc)
+    async def pause_cmd(self, inter:Inter):
+        """Pauses the currently playing song"""
+
+        voice_state = self.get_voice_state(inter)
+
+        # Check that there is a song playing
+        if not voice_state.is_playing:
+            await inter.response.send_message(MUSIC_NOTPLAYING)
+            return
+
+        voice_state.voice.pause()
+        await inter.response.send_message(MUSIC_PAUSED)
+
+    @app_commands.command(name="resume")
+    @app_commands.check(check_member_in_vc)
+    async def resume_cmd(self, inter:Inter):
+        """Resumes the currently playing song"""
+
+        voice_state = self.get_voice_state(inter)
+
+        # Check that there is a song playing
+        if not voice_state.is_playing:
+            await inter.response.send_message(MUSIC_NOTPLAYING)
+            return
+
+        voice_state.voice.resume()
+        await inter.response.send_message(MUSIC_RESUMED)
+
+    @app_commands.command(name="stop")
+    @app_commands.check(check_member_in_vc)
+    @app_commands.default_permissions(move_members=True)
+    async def stop_cmd(self, inter:Inter):
+        """Stops the music player and clears the queue"""
+
+        log.debug("Stopping the music player")
+
+        voice_state = self.get_voice_state(inter)
+        voice_state.queue.clear()
+
+        if voice_state.is_playing:
+            voice_state.stop()
+
+        await inter.response.send_message(MUSIC_STOPPED)
+
+
+
+    # @group.command(name="loop")
+    # @app_commands.check(check_member_in_vc)
     async def loop_cmd(self, inter:Inter, loop:bool):
         """BROKEN: Loops the currently playing song
 
@@ -611,16 +692,13 @@ class MusicCog(BaseCog, name="New Music"):
 
         # We can't loop if there is no song playing
         if not voice_state.is_playing:
-            return await inter.response.send_message(
-                "I'm not playing anything right now!"
-                "\nUse `/music play <url>` to play a song."
-            )
+            await inter.response.send_message(MUSIC_NOTPLAYING)
+            return
 
         # Set the loop state
         voice_state.loop = loop
         await inter.response.send_message(
-            "I'm now looping the current song" if loop else
-            "I'm no longer looping the current song"
+            MUSIC_LOOPING if loop else MUSIC_NOTLOOPING
         )
 
     @group.command(name="play")
@@ -651,12 +729,18 @@ class MusicCog(BaseCog, name="New Music"):
         song = Song(source)
         await voice_state.queue.put(song)
 
-        embed = AddedTrackEmbed(
-            song=song,
-            voice_state=voice_state
-        )
-        view = TrackAddedView(song, voice_state)
-        await inter.followup.send(embed=embed, view=view)
+        # if the song is the only one in the queue, another embed
+        # will be sent when the song starts playing, so don't clutter
+        # the chat with this embed also.
+        if voice_state.is_playing:
+            embed = AddedTrackEmbed(
+                song=song,
+                voice_state=voice_state
+            )
+            view = TrackAddedView(song, voice_state)
+            return await inter.followup.send(embed=embed, view=view)
+
+        await inter.followup.send(MUSIC_ADDEDPLAYSOON)
 
 
 async def setup(bot):
