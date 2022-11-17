@@ -1,5 +1,5 @@
 # OneBot
- My custom discord bot.
+An all-in-one bot for the social platform Discord
 
 ## Setup
 
