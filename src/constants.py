@@ -1,10 +1,7 @@
 """This file contains all the constants used in the bot."""
 
-from enum import Enum
-
 from easy_pil import Font
 
-from db import db
 
 # Bot constants
 ACTIVITY_MSG = 'I am up and running!'
