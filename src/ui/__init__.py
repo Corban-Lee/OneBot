@@ -1,6 +1,11 @@
 """Init the ui package"""
 
-from .modals import BirthdayModal, BanMemberModal, MakeEmbedModal, TicketModal
+from .modals import (
+    BirthdayModal,
+    BanMemberModal,
+    MakeEmbedModal,
+    TicketModal
+)
 from .embeds import (
     NextBirthdayEmbed,
     BirthdayHelpEmbed,
@@ -16,5 +21,15 @@ from .embeds import (
     NowPlayingEmbed,
     MusicQueueEmbed
 )
-from .views import EmbedPageView, ExpClusterView, ManageTicketView, MusicControlView, TrackAddedView
-from .levelcards import LevelCard, ScoreBoard, LevelUpCard
+from .views import (
+    EmbedPageView,
+    ExpClusterView,
+    ManageTicketView,
+    MusicControlView,
+    TrackAddedView
+)
+from .levelcards import (
+    LevelCard,
+    ScoreBoard,
+    LevelUpCard
+)

@@ -25,7 +25,7 @@ class TicketModal(dui.Modal):
         super().__init__(title=title)
         self.callback = callback
 
-    async def on_submit(self, inter:Inter):
+    async def on_submit(self, inter:Inter):  # pylint: disable=arguments-differ
         """Called when the modal is submitted"""
 
         # Provide the callback with the ticket description
@@ -69,7 +69,7 @@ class MakeEmbedModal(dui.Modal, title="Create Embed"):
         super().__init__()
         self.coro = coro
 
-    async def on_submit(self, inter:Inter):
+    async def on_submit(self, inter:Inter): # pylint: disable=arguments-differ
         await self.coro(
             _inter=inter,
             title=self.title_input.value,
@@ -80,7 +80,7 @@ class MakeEmbedModal(dui.Modal, title="Create Embed"):
 
 class BanMemberModal(dui.Modal, title="Confirm Ban"):
     """Confirm a ban before proceeding"""
-    
+
     reason_input = dui.TextInput(
         label="Reason For Ban:",
         placeholder="Example: violating the rules, spamming, etc.",
@@ -91,10 +91,10 @@ class BanMemberModal(dui.Modal, title="Confirm Ban"):
     def __init__(self, member:discord.Member):
         super().__init__()
         self.member = member
-        
+
         log.debug("Initialized %s", self.__class__.__name__)
 
-    async def on_submit(self, inter:Inter):
+    async def on_submit(self, inter:Inter): # pylint: disable=arguments-differ
 
         log.debug("Banning %s", self.member)
 

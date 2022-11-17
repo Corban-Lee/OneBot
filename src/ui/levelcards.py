@@ -1,7 +1,6 @@
 """Levelcards module. Contains the Levelcard class and related functions."""
 
 import logging
-from time import perf_counter
 from math import ceil
 
 from discord import Status, Colour, Member, File
@@ -25,51 +24,6 @@ from constants import (
 
 
 log = logging.getLogger(__name__)
-
-def _draw_status_icon(self, status):
-    """Draw the status icon"""
-
-    log.debug("Drawing status icon")
-
-    status_image = Editor(Canvas(
-        (90, 90),
-        color=BLACK
-    )).circle_image().paste(
-        Editor(Canvas(
-            (70, 70),
-            color=self._status_colour
-        )).circle_image(),
-        (10, 10)
-    )
-
-    log.debug("Drawing status icon symbol")
-
-    match status:
-
-        case Status.idle:
-            status_image.paste(Editor(Canvas(
-                (50, 50),
-                color=self._background_1
-            )).circle_image(), (5, 10))
-
-        case Status.dnd:
-            status_image.rectangle(
-                (20, 39), width=50, height=12,
-                fill=self._background_1, radius=15
-            )
-
-        case Status.offline:
-            status_image.paste(Editor(Canvas(
-                (40, 40),
-                color=self._background_1
-            )).circle_image(), (25, 25))
-
-        case _:
-            pass
-
-    return status_image
-
-
 
 
 def get_status_colour(status:Status) -> Colour:
@@ -123,6 +77,7 @@ class CustomImageBase:
 
     __slots__ = ()
     editor: Editor
+    member: Member
 
     # Colours
     is_darkmode: bool
@@ -178,13 +133,13 @@ class CustomImageBase:
         return File(
             self.editor.image_bytes,
             filename=filename or "onebot_image.png",
-            description=f"An image created by OneBot."
+            description="An image created by OneBot."
         )
 
 class LevelUpCard(CustomImageBase):
     """A ranking card for members"""
 
-    __slots__ = ("is_darkmode",)
+    __slots__ = ("is_darkmode", "editor")
     lvl_obj: MemberLevelModel
     member: Member
 
@@ -251,25 +206,25 @@ class ScoreBoard(CustomImageBase):
 
         width = 920 * len(self.members) if len(self.members) < 3  else 2760
         height = 220 * ceil(len(self.members) / 3) if len(self.members) >= 3 else 220
-        x = y = 0
+        x_pos = y_pos = 0
 
         self.editor = Editor(Canvas((width, height)))
 
         for i, (member, lvl_obj) in enumerate(self.members):
 
-            log.debug("%s is at position %sx%s", i, x, y)
+            log.debug("%s is at position %sx%s", i, x_pos, y_pos)
 
             card = LevelCard(member, lvl_obj)
             await card.draw()
-            self.editor.paste(card.editor, (x, y))
+            self.editor.paste(card.editor, (x_pos, y_pos))
 
             i += 1
             if i % 3 != 0:
-                x += 920
+                x_pos += 920
             # every fourth card is on a new row
             else:
-                x = 0
-                y += 220
+                x_pos = 0
+                y_pos += 220
 
 class LevelCard(CustomImageBase):
     """A ranking card for members"""

@@ -64,7 +64,7 @@ def is_admin(inter:Inter, bot) -> bool:
 def normalized_name(member:discord.Member, with_id:bool=True) -> str:
     """Returns the member's name followed by their
     discriminator and ID.
-    
+
     Args:
         member (discord.Member): The member to get the name of.
         with_id (bool, optional): Whether to include the ID. Defaults to True.
