@@ -50,7 +50,7 @@ class Welcome(BaseCog):
 
         try:
             channel = await self._get_channel_from_purpose(
-                member.guild.id, ChannelPurposes.members_say_welcome.value
+                member.guild.id, ChannelPurposes.welcome.value
             )
         except EmptyQueryResult:
             log.debug("No welcome channel found")
@@ -71,7 +71,7 @@ class Welcome(BaseCog):
 
         try:
             channel = await self._get_channel_from_purpose(
-                member.guild.id, ChannelPurposes.members_say_goodbye.value
+                member.guild.id, ChannelPurposes.goodbye.value
             )
         except EmptyQueryResult:
             log.debug("No goodbye channel found")
