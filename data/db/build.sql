@@ -75,7 +75,9 @@ CREATE TABLE IF NOT EXISTS purposed_objects (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     purpose_id INTEGER NOT NULL,
     object_id INTEGER NOT NULL,
+    guild_id INTEGER NOT NULL,
     FOREIGN KEY (purpose_id) REFERENCES purposes(id) ON DELETE CASCADE,
+    FOREIGN KEY (guild_id) REFERENCES guilds(guild_id) ON DELETE CASCADE,
     UNIQUE (purpose_id, object_id) ON CONFLICT REPLACE
 );
 

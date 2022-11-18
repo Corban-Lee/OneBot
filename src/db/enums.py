@@ -13,6 +13,11 @@ _settings_data = db.records("SELECT id, name FROM settings_options")
 _settings_map = {name: _id for _id, name in _settings_data}
 SettingsOptions = Enum("SettingsOptions", _settings_map)
 
+# Purpose types
+_purpose_types_data = db.records("SELECT id, name FROM purpose_types")
+_purpose_types_map = {name: _id for _id, name in _purpose_types_data}
+PurposeTypes = Enum("PurposeTypes", _purpose_types_map)
+
 # Category Purposes
 _cat_purposes_data = db.records(
     "SELECT id, name FROM purposes WHERE purpose_type_id = "

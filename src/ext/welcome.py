@@ -1,6 +1,7 @@
 """Cog for welcoming new members"""
 
 import logging
+
 import discord
 from discord.ext import commands
 
@@ -23,14 +24,14 @@ class Welcome(BaseCog):
     async def _get_channel_from_purpose(
         self,
         guild_id:int,
-        purpose_id:int
+        purpose:ChannelPurposes
     ) -> discord.TextChannel | None:
         """Get a channel object"""
 
         channel_id = db.field(
-            "SELECT channel_id FROM guild_channels " \
+            "SELECT object_id FROM purposed_objects " \
             "WHERE guild_id = ? AND purpose_id = ?",
-            guild_id, purpose_id
+            guild_id, purpose.value
         )
         if not channel_id:
             raise EmptyQueryResult("No channel with that purpose found")
@@ -50,7 +51,7 @@ class Welcome(BaseCog):
 
         try:
             channel = await self._get_channel_from_purpose(
-                member.guild.id, ChannelPurposes.welcome.value
+                member.guild.id, ChannelPurposes.welcome
             )
         except EmptyQueryResult:
             log.debug("No welcome channel found")
@@ -71,7 +72,7 @@ class Welcome(BaseCog):
 
         try:
             channel = await self._get_channel_from_purpose(
-                member.guild.id, ChannelPurposes.goodbye.value
+                member.guild.id, ChannelPurposes.goodbye
             )
         except EmptyQueryResult:
             log.debug("No goodbye channel found")

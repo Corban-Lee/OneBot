@@ -14,6 +14,7 @@ from discord import (
 from tabulate import tabulate
 
 from db import db
+from db.enums import PurposeTypes
 from exceptions import EmptyQueryResult
 from . import BaseCog
 
@@ -22,28 +23,29 @@ log = logging.getLogger(__name__)
 _category_purposes_as_choices = [
         app_commands.Choice(name=desc, value=purpose_id)
         for desc, purpose_id in db.records(
-            "SELECT description, id FROM purposes WHERE purpose_type_id = "
-            "(SELECT id FROM purpose_types WHERE name = 'category')"
+            "SELECT description, id FROM purposes WHERE "
+            "purpose_type_id = ?",
+            PurposeTypes.category.value
         )
     ]
 
 _textchannel_purposes_as_choices = [
     app_commands.Choice(name=desc, value=purpose_id)
     for desc, purpose_id in db.records(
-        "SELECT description, id FROM purposes WHERE purpose_type_id = "
-        "(SELECT id FROM purpose_types WHERE name = 'channel')"
+        "SELECT description, id FROM purposes WHERE "
+        "purpose_type_id = ?",
+        PurposeTypes.channel.value
     )
 ]
 
 _role_purposes_as_choices = [
     app_commands.Choice(name=desc, value=purpose_id)
     for desc, purpose_id in db.records(
-        "SELECT description, id FROM purposes WHERE purpose_type_id = "
-        "(SELECT id FROM purpose_types WHERE name = 'role')"
+        "SELECT description, id FROM purposes WHERE "
+        "purpose_type_id = ?",
+        PurposeTypes.role.value
     )
 ]
-
-
 
 
 class PurposeCog(BaseCog, name="Purposes"):
@@ -62,19 +64,25 @@ class PurposeCog(BaseCog, name="Purposes"):
         description="Remove a purpose from a server category, channel or role"
     )
 
-    def _set_object_purpose(self, purpose_id:int, object_id:int):
+    def _set_object_purpose(
+        self,
+        purpose_id:int,
+        object_id:int,
+        guild_id:int
+    ) -> None:
         """Set the purpose of a discord object
         The discord object can be a category, textchannel or role
 
         Args:
             purpose_id (int): The purpose id
             object_id (int): The object id
+            guild_id (int): The guild id for the object
         """
 
         db.execute(
-            "INSERT INTO purposed_objects (purpose_id, object_id) "
-            "VALUES (?, ?)",
-            purpose_id, object_id
+            "INSERT INTO purposed_objects  "
+            "(purpose_id, object_id, guild_id) VALUES (?, ?, ?)",
+            purpose_id, object_id, guild_id
         )
 
     def _remove_object_purpose(self, purpose_id:int, object_id:int):
@@ -104,24 +112,35 @@ class PurposeCog(BaseCog, name="Purposes"):
 
         log.debug("Listing purposes for guild %s", inter.guild.id)
 
-        all_objects = chain(inter.guild.channels, inter.guild.roles) 
-        data = db.records("SELECT object_id, purpose_id from purposed_objects")
+        # Get all puposed objects for this guild
+        objects = db.records(
+            "SELECT purpose_id, object_id FROM purposed_objects "
+            "WHERE guild_id = ?",
+            inter.guild.id
+        )
+
+        # Get the purpose descriptions
         purposes = {
             purpose_id: desc for purpose_id, desc in
             db.records("SELECT id, description FROM purposes")
         }
 
-        # I am not list comprehending this because it is too long
-        objects = []
-        for obj in all_objects:
-            for obj_id, purpose_id in data:
-                if obj.id == obj_id:
-                    obj_type = type(obj).__name__
-                    objects.append((purposes[purpose_id], obj.name, obj_type))
+        # Create an output of tuples of (purpose, object name, object type)
+        output = []
+        for purpose_id, object_id in objects:
 
-        log.debug("Found %s objects", len(objects))
+            # Get the object
+            obj = self.bot.get.channel(object_id)
+            if obj is None:
+                obj = self.bot.get.role(object_id)
 
-        table = tabulate(objects, headers=("Purpose", "Name", "Type"))
+            # Add the object to the output
+            obj_type = type(obj).__name__
+            output.append((purposes[purpose_id], obj.name, obj_type))
+
+        log.debug("Found %s objects", len(output))
+
+        table = tabulate(output, headers=("Purpose", "Name", "Type"))
         await inter.response.send_message(
             f"```{table}```",
             ephemeral=True
@@ -141,7 +160,8 @@ class PurposeCog(BaseCog, name="Purposes"):
 
         self._set_object_purpose(
             object_id=category.id,
-            purpose_id=purpose.value
+            purpose_id=purpose.value,
+            guild_id=inter.guild.id
         )
 
         await inter.response.send_message(
@@ -183,7 +203,8 @@ class PurposeCog(BaseCog, name="Purposes"):
 
         self._set_object_purpose(
             object_id=channel.id,
-            purpose_id=purpose.value
+            purpose_id=purpose.value,
+            guild_id=inter.guild.id
         )
 
         await inter.response.send_message(
@@ -226,7 +247,8 @@ class PurposeCog(BaseCog, name="Purposes"):
 
         self._set_object_purpose(
             object_id=role.id,
-            purpose_id=purpose.value
+            purpose_id=purpose.value,
+            guild_id=inter.guild.id
         )
 
         await inter.response.send_message(
