@@ -6,9 +6,9 @@ from dataclasses import dataclass
 from math import sqrt, ceil
 from enum import Enum
 
-from . import db
 from utils import abbreviate_num
 from exceptions import EmptyQueryResult
+from . import db
 
 
 log = logging.getLogger(__name__)
@@ -24,6 +24,7 @@ class GuildChannels:
 
     @classmethod
     def from_purpose(cls, guild_id:int, purpose_id:int):
+        """Get a GuildChannels object from a guild id and purpose id"""
 
         data = db.record(
             "SELECT * FROM guild_channels WHERE guild_id = ? AND purpose_id = ?",
@@ -41,6 +42,7 @@ class GuildChannels:
 
     @classmethod
     def from_database(cls, channel_id:int):
+        """Get a GuildChannels object from a channel id"""
 
         data = db.record(
             "SELECT * FROM guild_channels WHERE channel_id = ?",
@@ -71,10 +73,11 @@ class MemberLevelModel:
 
     def _update(self):
         self.level_raw = 0.07 * sqrt(self.xp_raw)
+        self.prev_xp_raw = (ceil(self.level_raw - 1) /0.07) ** 2
         self.next_xp_raw = (ceil(self.level_raw) / 0.07) ** 2
 
     @property
-    def xp(self) -> str:
+    def xp(self) -> str:  # pylint: disable=invalid-name
         """Get the member experience points"""
 
         log.debug("Getting member xp")
@@ -86,6 +89,13 @@ class MemberLevelModel:
 
         log.debug("Getting member next xp")
         return abbreviate_num(self.next_xp_raw - 1)
+
+    @property
+    def prev_xp(self):
+        """Get the member experience points needed for the previous level"""
+
+        log.debug("Getting member prev xp")
+        return abbreviate_num(self.prev_xp_raw - 1)
 
     @property
     def level(self) -> int:
@@ -177,7 +187,8 @@ class MemberLevelModel:
 
         return cls(member_id, guild_id, xp)
 
-
+## forgot what this is
+## afraid to touch 😀
 class UserSettings:
 
     def get(user_id:int, option:Enum) -> bool:

@@ -469,7 +469,7 @@ class MusicCog(BaseCog, name="New Music"):
 
     @staticmethod
     async def check_member_in_vc(inter:Inter) -> bool:
-        """Check if the member is in a voice channel, also checks 
+        """Check if the member is in a voice channel, also checks
         if the bot is already in another voice channel.
 
         Returns:

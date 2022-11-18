@@ -50,8 +50,8 @@ class BirthdayCog(BaseCog, name='Birthdays'):
         # If there are no birthdays, we can stop here
         if not data:
             log.debug('I don\'t know anyone\'s birthday')
+            return
 
-        # Get the current date to check against
         now = datetime.now()
 
         # Loop through all users and check to celebrate birthday
