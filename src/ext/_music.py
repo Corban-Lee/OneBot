@@ -522,4 +522,5 @@ class Music(BaseCog, name="old music"):
                 raise commands.CommandError('Bot is already in a voice channel.')
 
 async def setup(bot):
+    return  # disable this extension
     await bot.add_cog(Music(bot))
