@@ -371,8 +371,12 @@ class LevelCard(CustomImageBase):
 
         log.debug("Drawing progress bar")
 
-        percentage = (self.lvl_obj.xp_raw / self.lvl_obj.next_xp_raw) * 100
-        percentage = max(percentage, 5)  # <10 causes visual issues
+        percentage = (
+            (self.lvl_obj.xp_raw - self.lvl_obj.prev_xp_raw) /
+            (self.lvl_obj.next_xp_raw - self.lvl_obj.prev_xp_raw)
+        ) * 100
+
+        percentage = max(percentage, 5)  # <5 causes visual issues
 
         # Bar dimensions
         position = (420, 275)

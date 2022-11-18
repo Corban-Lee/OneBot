@@ -296,17 +296,21 @@ class LevelCog(BaseCog, name='Level Progression'):
         )
 
     @app_commands.command(name='rank')
-    @app_commands.describe(
-        member="The member to see the rank of",
-        ephemeral="Hide the bot response from other users"
-    )
     async def get_levelcard_cmd(
         self,
         inter:Inter,
         member:discord.Member=None,
         ephemeral:bool=False
     ):
-        """Get the levelboard of a server member"""
+        """Get the levelboard of a server member
+
+        Args:
+            inter (Inter): The interaction object
+            member (discord.Member, optional): The member to get the
+                levelboard of. Defaults to you.
+            ephemeral (bool, optional): Hide the bot response from
+                other users. Defaults to False.
+        """
 
         await self.send_levelboard(inter, member, ephemeral)
 
