@@ -2,6 +2,8 @@
 
 import logging
 from math import ceil
+from functools import cache
+from time import perf_counter
 
 from discord import Status, Colour, Member, File
 from easy_pil import (
@@ -26,6 +28,7 @@ from constants import (
 log = logging.getLogger(__name__)
 
 
+@cache
 def get_status_colour(status:Status) -> Colour:
     """Get the colour that corresponds to the given status
 
@@ -34,6 +37,9 @@ def get_status_colour(status:Status) -> Colour:
 
     Returns:
         discord.Colour: The colour that corresponds to the given
+
+    Raises:
+        ValueError: If the status is not recognised
     """
 
     log.debug("Getting colour for status %s", status)
@@ -50,8 +56,9 @@ def get_status_colour(status:Status) -> Colour:
         case Status.invisible:
             return Colour.blurple()
         case _:
-            return Colour.blurple()
+            raise ValueError(f"Unknown Status: {status}")
 
+@cache
 def get_colours(dark_mode:bool) -> tuple[str, str, str, str]:
     """Get the colours for the levelboard
     Returns the colours as a tuple in the following order:
@@ -93,23 +100,31 @@ class CustomImageBase:
 
         log.debug("Defining colours")
 
+        # Set attributes for the colours
         (self._background_1,
          self._background_2,
          self._foreground_1,
          self._foreground_2) = get_colours(self.is_darkmode)
+
+        # Set the status colour
         self._status_colour = get_status_colour(
             self.member.status
         ).to_rgb()
 
-        # The default colour is black which is not very nice, don't use it
+        # The default colour is black, catch that here and swap it
+        # out for light grey
         if self.member.colour == Colour.default():
             self._accent_colour = Colour.light_grey().to_rgb()
-        else:
-            self._accent_colour = self.member.colour.to_rgb()
+            return
+
+        # Otherwise just set the accent to the member's colour
+        self._accent_colour = self.member.colour.to_rgb()
 
     def antialias_resize(self):
-        """Resize the image by half to antialias it"""
+        """Halves the width and height of the image, but the image
+        will be antialiased to make it look smoother"""
 
+        start = perf_counter()
         log.debug("Resizing and antialiasing the image")
 
         image = self.editor.image
@@ -118,6 +133,12 @@ class CustomImageBase:
             size=new_size,
             resample=Image.ANTIALIAS
         ))
+
+        end = perf_counter()
+        log.debug(
+            "Resizing and antialiasing took %s seconds",
+            end-start
+        )
 
     def get_file(self, filename:str=None) -> File:
         """Get the card as a discord.File object. Filename defaults to
@@ -146,15 +167,6 @@ class LevelUpCard(CustomImageBase):
     def __init__(
         self, member:Member, lvl_obj:MemberLevelModel, is_darkmode:bool=True
     ):
-        """Create a new LevelCard
-
-        Args:
-            member (discord.Member): The member to create the card for
-            rank (int): The rank of the member
-            xp (int): The xp of the member
-            level (int): The level of the member
-            dark_mode (bool): Whether the card is in dark mode
-        """
 
         log.info("Creating new level up card")
 
@@ -226,6 +238,8 @@ class ScoreBoard(CustomImageBase):
                 x_pos = 0
                 y_pos += 220
 
+        self.editor.image = self.editor.image.crop((0, 0, width-20, height-20))
+
 class LevelCard(CustomImageBase):
     """A ranking card for members"""
 
@@ -255,6 +269,7 @@ class LevelCard(CustomImageBase):
     async def draw(self):
         """Draw the level card"""
 
+        start = perf_counter()
         log.debug("Drawing levelcard")
 
         # The colours are used in the rest of the drawing process,
@@ -283,13 +298,15 @@ class LevelCard(CustomImageBase):
         # The card is resized to half its size to antialias it
         self.antialias_resize()
 
-        log.debug("Finished drawing levelcard, returning")
+        end = perf_counter()
+        log.debug("Took %s seconds to draw levelcard", end-start)
 
         return self
 
     def _draw_accent_polygon(self):
         """Draw the accent colour polygon on the card"""
 
+        start = perf_counter()
         log.debug("Drawing accent polygon")
 
         self.editor.polygon(
@@ -302,9 +319,16 @@ class LevelCard(CustomImageBase):
             fill=self._accent_colour
         )
 
+        end = perf_counter()
+        log.debug(
+            "Finished drawing accent polygon in %s seconds",
+            end-start
+        )
+
     async def _draw_avatar(self):
         """Draw the avatar on the card"""
 
+        start = perf_counter()
         log.debug("Drawing avatar image")
 
         # Get the member's avatar as an Image object
@@ -322,9 +346,16 @@ class LevelCard(CustomImageBase):
         # Paste the avatar onto the card
         self.editor.paste(avatar_image, (40, 40))
 
+        end = perf_counter()
+        log.debug(
+            "Finished drawing avatar image in %s seconds",
+            end-start
+        )
+
     def _draw_status_icon(self):
         """Draw the status icon on the card"""
 
+        start = perf_counter()
         log.debug("Drawing status icon")
 
         status_image = Editor(Canvas(
@@ -366,17 +397,16 @@ class LevelCard(CustomImageBase):
         # Paste the status icon onto the card
         self.editor.paste(status_image, (260, 260))
 
+        end = perf_counter()
+        log.debug(
+            "Finished drawing status icon in %s seconds", end-start
+        )
+
     def _draw_progress_bar(self):
         """Draw the progress bar"""
 
+        start = perf_counter()
         log.debug("Drawing progress bar")
-
-        percentage = (
-            (self.lvl_obj.xp_raw - self.lvl_obj.prev_xp_raw) /
-            (self.lvl_obj.next_xp_raw - self.lvl_obj.prev_xp_raw)
-        ) * 100
-
-        percentage = max(percentage, 5)  # <5 causes visual issues
 
         # Bar dimensions
         position = (420, 275)
@@ -397,13 +427,20 @@ class LevelCard(CustomImageBase):
             position=position,
             max_width=width, height=height,
             color=self._accent_colour,
-            percentage=percentage,
+            percentage=max(self.lvl_obj.percentage_to_next, 5),
             radius=radius
+        )
+
+        end = perf_counter()
+        log.debug(
+            "Finished drawing progress bar in %s seconds",
+            end-start
         )
 
     def _draw_name(self):
         """Draw the member's name on the card"""
 
+        start = perf_counter()
         log.debug("Drawing name text")
 
         # Shorthands for the name and discriminator
@@ -432,9 +469,16 @@ class LevelCard(CustomImageBase):
             )
         )
 
+        end = perf_counter()
+        log.debug(
+            "Finished drawing name text in %s seconds",
+            end-start
+        )
+
     def _draw_exp(self):
         """Draw the exp and next exp on the card"""
 
+        start = perf_counter()
         log.debug("Drawing exp text")
 
         # Draw it right onto the card
@@ -455,9 +499,16 @@ class LevelCard(CustomImageBase):
             )
         )
 
+        end = perf_counter()
+        log.debug(
+            "Finished drawing exp text in %s seconds",
+            end-start
+        )
+
     def _draw_levelrank(self):
         """Draw the level and rank on the card"""
 
+        start = perf_counter()
         log.debug("Drawing level and rank text")
 
         self.editor.multi_text(
@@ -485,4 +536,10 @@ class LevelCard(CustomImageBase):
                     color=self._accent_colour
                 )
             )
+        )
+
+        end = perf_counter()
+        log.debug(
+            "Finished drawing level and rank text in %s seconds",
+            end-start
         )

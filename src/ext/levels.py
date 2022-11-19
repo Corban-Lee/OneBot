@@ -2,6 +2,7 @@
 
 import logging
 from datetime import datetime, timedelta
+from time import perf_counter
 
 import discord
 from discord import app_commands
@@ -10,7 +11,7 @@ from discord.ext import commands
 
 from db import db, MemberLevelModel, UserSettings
 from db.enums import SettingsOptions
-from ui import LevelCard, ScoreBoard, LevelUpCard
+from ui import LevelCard, ScoreBoard
 from utils import is_bot_owner
 from exceptions import EmptyQueryResult
 from . import BaseCog
@@ -248,6 +249,8 @@ class LevelCog(BaseCog, name='Level Progression'):
     ) -> None:
         """Responds to the given interaction with the levelboard"""
 
+        start = perf_counter()
+
         # The interaction member does not have a status
         # which is needed for the level card, so we need
         # to get the member from the guild again.
@@ -294,6 +297,9 @@ class LevelCog(BaseCog, name='Level Progression'):
             file=levelcard.get_file(),
             ephemeral=ephemeral
         )
+
+        end = perf_counter()
+        log.debug("Levelboard sent in %s seconds", end-start)
 
     @app_commands.command(name='rank')
     async def get_levelcard_cmd(

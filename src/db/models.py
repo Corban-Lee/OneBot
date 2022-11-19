@@ -81,14 +81,14 @@ class MemberLevelModel:
         """Get the member experience points"""
 
         log.debug("Getting member xp")
-        return abbreviate_num(self.xp_raw - 1)
+        return abbreviate_num(self.xp_raw - self.prev_xp_raw - 1)
 
     @property
     def next_xp(self) -> int:
         """Get the member experience points needed for the next level"""
 
         log.debug("Getting member next xp")
-        return abbreviate_num(self.next_xp_raw - 1)
+        return abbreviate_num(self.next_xp_raw - self.prev_xp_raw - 1)
 
     @property
     def prev_xp(self):
@@ -96,6 +96,15 @@ class MemberLevelModel:
 
         log.debug("Getting member prev xp")
         return abbreviate_num(self.prev_xp_raw - 1)
+
+    @property
+    def percentage_to_next(self) -> float:
+        """Get the percentage of xp to the next level"""
+
+        return (
+            (self.xp_raw - self.prev_xp_raw) /
+            (self.next_xp_raw - self.prev_xp_raw)
+        ) * 100
 
     @property
     def level(self) -> int:
