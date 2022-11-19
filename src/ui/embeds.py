@@ -358,7 +358,7 @@ class LevelObjectEmbed(discord.Embed):
                 ("", ""),
                 ("XP", level_object.xp),
                 ("XP to next level", level_object.next_xp),
-                ("Progress", f"{level_object.percentage_to_next:.2f}%"),
+                ("Level Progress", f"{level_object.percentage_to_next:.2f}%"),
                 ("", ""),
                 ("Total XP", level_object.total_xp),
                 ("Total XP to next level", level_object.total_next_xp),
