@@ -19,7 +19,8 @@ from .embeds import (
     ManageTicketEmbed,
     AddedTrackEmbed,
     NowPlayingEmbed,
-    MusicQueueEmbed
+    MusicQueueEmbed,
+    LevelObjectEmbed
 )
 from .views import (
     EmbedPageView,

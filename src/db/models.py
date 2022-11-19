@@ -98,6 +98,20 @@ class MemberLevelModel:
         return abbreviate_num(self.prev_xp_raw - 1)
 
     @property
+    def total_xp(self):
+        """Get the total xp of this member"""
+
+        log.debug("Getting total xp")
+        return abbreviate_num(self.xp_raw)
+
+    @property
+    def total_next_xp(self):
+        """Get the total xp needed for the next level"""
+
+        log.debug("Getting total next xp")
+        return abbreviate_num(self.next_xp_raw)
+
+    @property
     def percentage_to_next(self) -> float:
         """Get the percentage of xp to the next level"""
 

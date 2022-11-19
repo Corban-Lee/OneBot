@@ -11,7 +11,7 @@ from discord.ext import commands
 
 from db import db, MemberLevelModel, UserSettings
 from db.enums import SettingsOptions
-from ui import LevelCard, ScoreBoard
+from ui import LevelCard, ScoreBoard, LevelObjectEmbed
 from utils import is_bot_owner
 from exceptions import EmptyQueryResult
 from . import BaseCog
@@ -245,7 +245,8 @@ class LevelCog(BaseCog, name='Level Progression'):
         self,
         inter:Inter,
         member:discord.Member | None,
-        ephemeral:bool
+        embed:bool=False,
+        ephemeral:bool=False
     ) -> None:
         """Responds to the given interaction with the levelboard"""
 
@@ -288,6 +289,13 @@ class LevelCog(BaseCog, name='Level Progression'):
             )
             return
 
+        if embed:
+            log.debug("Sending levelboard as embed")
+            return await inter.followup.send(
+                embed=LevelObjectEmbed(level_object, member),
+                ephemeral=ephemeral
+            )
+
         # Create the level card
         levelcard = LevelCard(member, level_object)
         await levelcard.draw()
@@ -306,6 +314,7 @@ class LevelCog(BaseCog, name='Level Progression'):
         self,
         inter:Inter,
         member:discord.Member=None,
+        embed:bool=False,
         ephemeral:bool=False
     ):
         """Get the levelboard of a server member
@@ -314,11 +323,13 @@ class LevelCog(BaseCog, name='Level Progression'):
             inter (Inter): The interaction object
             member (discord.Member, optional): The member to get the
                 levelboard of. Defaults to you.
+            embed (bool, optional): Whether to send the levelboard as
+                an embed or as a png file. Defaults to False.
             ephemeral (bool, optional): Hide the bot response from
                 other users. Defaults to False.
         """
 
-        await self.send_levelboard(inter, member, ephemeral)
+        await self.send_levelboard(inter, member, embed, ephemeral)
 
     async def get_levelcard_ctxmenu(self, inter:Inter, member:discord.Member):
         """Context menu version of see_member_levelboard"""

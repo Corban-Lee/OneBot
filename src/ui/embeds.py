@@ -340,6 +340,33 @@ class SetChannelEmbed(discord.Embed):
         self.set_footer(text="Channel Set")
 
 
+class LevelObjectEmbed(discord.Embed):
+    """Embed for displaying info about a level object"""
+
+    def __init__(self, level_object, member:discord.Member):
+        super().__init__(
+            title=str(member),
+            colour=member.colour
+        )
+
+        self.set_thumbnail(url=member.display_avatar.url)
+
+        self.description = "```" + tabulate(
+            (
+                ("Rank", level_object.rank),
+                ("Level", level_object.level),
+                ("", ""),
+                ("XP", level_object.xp),
+                ("XP to next level", level_object.next_xp),
+                ("Progress", f"{level_object.percentage_to_next:.2f}%"),
+                ("", ""),
+                ("Total XP", level_object.total_xp),
+                ("Total XP to next level", level_object.total_next_xp),
+            ),
+            tablefmt="moinmoin"
+        ) + "```"
+
+
 class ClaimedExpClusterEmbed(discord.Embed):
     """Embed for when a user claims an exp cluster"""
 
