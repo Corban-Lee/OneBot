@@ -119,44 +119,10 @@ CREATE TABLE IF NOT EXISTS settings (
     UNIQUE (object_id, option_id) ON CONFLICT REPLACE
 );
 
--- CREATE TABLE IF NOT EXISTS setting_data_types (
---     id INTEGER PRIMARY KEY AUTOINCREMENT,
---     name TEXT NOT NULL UNIQUE
--- );
-
--- INSERT OR IGNORE INTO setting_data_types (name) VALUES
---     ('boolean'),
---     ('integer'),
---     ('string');
-
--- -- Settings
--- -- TODO: rename to config options
--- CREATE TABLE IF NOT EXISTS settings (
---     id INTEGER PRIMARY KEY AUTOINCREMENT,
---     safe_name TEXT NOT NULL UNIQUE,
---     name TEXT NOT NULL,
---     description TEXT
---     --for_user INTEGER NOT NULL  -- 0 = guild, 1 = user
--- );
-
--- -- Add default settings here
--- INSERT OR IGNORE INTO settings (safe_name, name, description) VALUES 
---     ('lvl_alert', 'Level Up Alert', 'Send a message when you level up.');
-
--- -- Table to store the settings
--- -- TODO: rename to config values
--- CREATE TABLE IF NOT EXISTS user_settings (
---     id INTEGER PRIMARY KEY AUTOINCREMENT,
---     user_id INTEGER NOT NULL,
---     setting_id INTEGER NOT NULL,
---     value INTEGER NOT NULL,
---     FOREIGN KEY (setting_id) REFERENCES settings(id) ON DELETE CASCADE,
---     UNIQUE (user_id, setting_id)
--- );
-
 --------------------------------------------------------------------------------
 
--- tickets-#36 - Rewrite tickets system
+
+-- #36 - Rewrite tickets system
 -- Store user created tickets
 CREATE TABLE IF NOT EXISTS tickets (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -166,4 +132,16 @@ CREATE TABLE IF NOT EXISTS tickets (
     active INTEGER NOT NULL DEFAULT 1,
     timestamp INTEGER NOT NULL,
     FOREIGN KEY (guild_id) REFERENCES guilds(guild_id) ON DELETE CASCADE
-)
+);
+
+
+-- #76 - Add Reaction Roles
+-- Store Reaction Roles Here
+CREATE TABLE IF NOT EXISTS reaction_roles (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    guild_id INTEGER NOT NULL,
+    message_id INTEGER NOT NULL,
+    emoji TEXT NOT NULL, 
+    role_id INTEGER NOT NULL,
+    FOREIGN KEY (guild_id) REFERENCES guilds(guild_id) ON DELETE CASCADE
+);
