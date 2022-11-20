@@ -84,3 +84,13 @@ MUSIC_ADDEDPLAYSOON = (
     "I've added the song to the queue!"
     "\nIt will play in a moment."
 )
+
+# Entertainment constants
+
+ROCK = "rock"
+PAPER = "paper"
+SCISSORS = "scissors"
+RPS_CHOICES = (ROCK, PAPER, SCISSORS)
+RPS_WINNER = "You win!"
+RPS_LOSER = "You Lose, I win!"
+RPS_DRAW = "Draw, we both chose the same thing..."
