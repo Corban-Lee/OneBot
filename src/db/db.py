@@ -4,8 +4,8 @@ import logging
 from os.path import isfile
 from sqlite3 import connect
 
-DB_PATH = './data/db/db.sqlite3'
-BUILD_PATH = './data/db/build.sql'
+from constants import DB_PATH, BUILD_PATH
+
 
 log = logging.getLogger(__name__)
 

@@ -2,8 +2,10 @@
 
 import asyncio
 import argparse
+import multiprocessing
 
 from bot import Bot
+from dashboard import DashboardApp
 
 # Parse command line arguments
 parser = argparse.ArgumentParser(
@@ -22,6 +24,12 @@ parser.add_argument(
     required=False,
     action="store_true"
 )
+parser.add_argument(
+    "-w", "--website-only",
+    help="Run the dashboard website only.",
+    required=False,
+    action="store_true"
+)
 
 async def main():
     """Main function for starting the application"""
@@ -36,8 +44,32 @@ async def main():
     else:
         token = args.token
 
+    # run the website
+    webapp = DashboardApp(
+        token="",
+        client_id=0,
+        client_secret=""
+    )
+
+    webapp_kwargs = {
+        "debug": True,
+        "host": "localhost",
+        "port": 5000
+    }
+
+    webapp_process = multiprocessing.Process(
+        target=webapp.run,
+        kwargs=webapp_kwargs,
+        daemon=False
+    )
+
+    if args.website_only:
+        webapp_process.start()
+        await asyncio.Event().wait()  # wait forever, until keyboard interrupt
+
     # Construct the bot, load the extensions and start it up!
     async with Bot(debug=args.debug) as bot:
+        webapp_process.start()
         await bot.load_extensions()
         await bot.start(token, reconnect=True)
 
