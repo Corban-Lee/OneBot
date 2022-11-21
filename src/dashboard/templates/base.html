@@ -27,12 +27,9 @@
         </div>
         <nav class="navbar navbar-dark bg-dark fixed-top">
             <div class="container-fluid">
-                <div>
-                    <button class="navbar-toggler rounded-4" type="button" data-bs-toggle="offcanvas" data-bs-target="#offcanvasNavbar" aria-controls="offcanvasNavbar">
-                        <span class="navbar-toggler-icon"></span>
-                    </button>
-                </div>
-                <a class="btn btn-primary rounded-4 px-5 px-sm-4" href="#">Login to Discord</a>
+                <button class="navbar-toggler rounded-4" type="button" data-bs-toggle="offcanvas" data-bs-target="#offcanvasNavbar" aria-controls="offcanvasNavbar">
+                    <span class="navbar-toggler-icon"></span>
+                </button>
                 <div class="offcanvas offcanvas-start text-light bg-dark" tabindex="-1" id="offcanvasNavbar" aria-labelledby="offcanvasNavbarLabel">
                     <div class="offcanvas-header">
                         <h5 class="offcanvas-title" id="offcanvasNavbarLabel">OneBot Dashboard</h5>
@@ -86,24 +83,43 @@
                             <li class="nav-item">
                                 <span class="navbar-text text-dark" href="#">evie wuz here</span>
                             </li>
+                            {% if not user %}
+                                <li class="nav-item">
+                                    <a class="btn btn-primary rounded-4 px-5 px-sm-4" href="/login">Login to Discord</a>
+                                </li>
+                            {% endif %}
                         </ul>
                     </div>
                     <div class="offcanvas-bottom p-3">
-                        <hr>
-                        <div class="dropup">
-                            <a class="d-flex align-items-center text-white text-decoration-none dropdown-toggle" id="dropdownUser1" data-bs-toggle="dropdown" aria-expanded="false">
-                                <img width="32" height="32" alt="avatar" class="rounded-circle me-2" src="https://cdn.discordapp.com/avatars/377453890523627522/1867fa1481eb3c7f95487351270c75c6.webp">
-                                <strong>Xord</strong>
-                            </a>
-                            <ul class="dropdown-menu dropdown-menu-dark text-small shadow" aria-labelledby="dropdownUser1">
-                                <li>
-                                    <a class="dropdown-item" href="#">
-                                        <i class="bi bi-gear me-1"></i>
-                                        Settings
-                                    </a>
-                                </li>
-                            </ul>
-                        </div>
+                        {% if user %}
+                            <hr>
+                            <div class="dropup">
+                                <a class="d-flex align-items-center text-white text-decoration-none dropdown-toggle" id="dropdownUser1" data-bs-toggle="dropdown" aria-expanded="false">
+                                    <img width="32" height="32" alt="avatar" class="rounded-circle me-2" src="{{ user.avatar_url or user.default_avatar_url }}">
+                                    <strong class="me-1">{{ user }}</strong>
+                                </a>
+                                <ul class="dropdown-menu dropdown-menu-dark mb-2 px-1 py-2 rounded-4 text-small shadow" aria-labelledby="dropdownUser1">
+                                    <li>
+                                        <a class="dropdown-item rounded-4" href="#">
+                                            <i class="bi bi-person-circle me-1"></i>
+                                            Profile
+                                        </a>
+                                    </li>
+                                    <li>
+                                        <a class="dropdown-item rounded-4" href="#">
+                                            <i class="bi bi-gear me-1"></i>
+                                            Settings
+                                        </a>
+                                    </li>
+                                    <li>
+                                        <a class="dropdown-item rounded-4" href="/logout">
+                                            <i class="bi bi-arrow-left-circle me-1"></i>
+                                            Logout
+                                        </a>
+                                    </li>
+                                </ul>
+                            </div>
+                        {% endif %}
                     </div>
                 </div>
             </div>
