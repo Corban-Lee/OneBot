@@ -145,3 +145,14 @@ CREATE TABLE IF NOT EXISTS reaction_roles (
     role_id INTEGER NOT NULL,
     FOREIGN KEY (guild_id) REFERENCES guilds(guild_id) ON DELETE CASCADE
 );
+
+-- #77 Write Economy System
+-- Store User Balances Here
+CREATE TABLE IF NOT EXISTS balances (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    guild_id INTEGER NOT NULL,
+    member_id INTEGER NOT NULL,
+    balance INTEGER NOT NULL DEFAULT 0,
+    active INTEGER NOT NULL DEFAULT 1,
+    FOREIGN KEY (guild_id) REFERENCES guilds(guild_id) ON DELETE CASCADE
+);
