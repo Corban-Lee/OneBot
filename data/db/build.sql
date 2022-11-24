@@ -63,6 +63,7 @@ INSERT OR IGNORE INTO purposes (purpose_type_id, name, description) VALUES
     ((SELECT id FROM purpose_types WHERE name = 'channel'), 'welcome', 'Member Join Notifications'),
     ((SELECT id FROM purpose_types WHERE name = 'channel'), 'goodbye', 'Member Leave Notifications'),
     ((SELECT id FROM purpose_types WHERE name = 'channel'), 'botlogs', 'Logs for Bot Actions'),
+    ((SELECT id FROM purpose_types WHERE name = 'channel'), 'guildlogs', 'Logs for the Server'),
     ((SELECT id FROM purpose_types WHERE name = 'role'), 'member', 'Auto-assigned Member Role'),
     ((SELECT id FROM purpose_types WHERE name = 'role'), 'muted', 'Muted'),
     ((SELECT id FROM purpose_types WHERE name = 'role'), 'mod', 'Moderator'),
@@ -104,7 +105,6 @@ CREATE TABLE IF NOT EXISTS settings_value_types (
     FOREIGN KEY (option_id) REFERENCES settings_options(id) ON DELETE CASCADE
 );
 
-
 -- use these as values, if none are found then it's a string input type
 INSERT OR IGNORE INTO settings_value_types (option_id, name, value) VALUES
     ((SELECT id FROM settings_options WHERE name = "lvl_alert"), "enabled", "1"),
@@ -121,7 +121,6 @@ CREATE TABLE IF NOT EXISTS settings (
 
 --------------------------------------------------------------------------------
 
-
 -- #36 - Rewrite tickets system
 -- Store user created tickets
 CREATE TABLE IF NOT EXISTS tickets (
@@ -133,7 +132,6 @@ CREATE TABLE IF NOT EXISTS tickets (
     timestamp INTEGER NOT NULL,
     FOREIGN KEY (guild_id) REFERENCES guilds(guild_id) ON DELETE CASCADE
 );
-
 
 -- #76 - Add Reaction Roles
 -- Store Reaction Roles Here

@@ -17,6 +17,73 @@ from .views import EmbedPageView
 log = logging.getLogger(__name__)
 
 
+# GUILD LOG EMBEDS ################################################################
+
+class LogNewMessage(discord.Embed):
+    """Embed for logging a new message"""
+
+    def __init__(self, message:discord.Message):
+        super().__init__(
+            title=f"Message Sent by {message.author}",
+            description=(
+                f"**Channel**\n{message.channel.mention}"
+                f"\n\n**Message Content**\n{message.content}"
+                f"\n\nJump to message: {message.jump_url}"
+            ),
+            colour=discord.Colour.green(),
+        )
+
+
+class LogEditedMessage(discord.Embed):
+    """Embed for logging an edited message"""
+
+    def __init__(self, before:discord.Message, after:discord.Message):
+        super().__init__(
+            title=f"Message Edited by {before.author}",
+            description=(
+                f"**Channel**\n{before.channel.mention}"
+                f"\n\n**Message Before**\n{before.content}"
+                f"\n\n**Message After**\n{after.content}"
+                f"\n\n**Jump to Message**\n{after.jump_url}"
+            ),
+            colour=discord.Colour.orange(),
+        )
+
+class LogDeletedMessage(discord.Embed):
+    """Embed for logging a deleted message"""
+
+    def __init__(self, message:discord.Message):
+        super().__init__(
+            title=f"Message Deleted by {message.author}",
+            description=(
+                f"**Channel**\n{message.channel.mention}"
+                f"\n\n**Message Content**\n{message.content}"
+            ),
+            colour=discord.Colour.red(),
+        )
+
+class LogNewMember(discord.Embed):
+    """Embed for logging a new member"""
+
+    def __init__(self, member:discord.Member):
+        super().__init__(
+            title=f"New Member Joined: {member}",
+            description=f"**Member ID**\n{member.id}",
+            colour=discord.Colour.green(),
+        )
+
+class LogMemberLeave(discord.Embed):
+    """Embed for logging a member leaving"""
+
+    def __init__(self, member:discord.Member):
+        super().__init__(
+            title=f"Member Left: {member}",
+            description=f"**Member ID**\n{member.id}",
+            colour=discord.Colour.red(),
+        )
+
+###################################################################################
+
 # MUSIC COMMAND EMBEDS ############################################################
 
 class MusicQueueEmbed(discord.Embed):

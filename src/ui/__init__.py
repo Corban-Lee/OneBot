@@ -20,7 +20,12 @@ from .embeds import (
     AddedTrackEmbed,
     NowPlayingEmbed,
     MusicQueueEmbed,
-    LevelObjectEmbed
+    LevelObjectEmbed,
+    LogNewMessage,
+    LogEditedMessage,
+    LogDeletedMessage,
+    LogNewMember,
+    LogMemberLeave,
 )
 from .views import (
     EmbedPageView,
