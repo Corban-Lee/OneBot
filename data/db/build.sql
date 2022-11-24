@@ -63,6 +63,7 @@ INSERT OR IGNORE INTO purposes (purpose_type_id, name, description) VALUES
     ((SELECT id FROM purpose_types WHERE name = 'channel'), 'welcome', 'Member Join Notifications'),
     ((SELECT id FROM purpose_types WHERE name = 'channel'), 'goodbye', 'Member Leave Notifications'),
     ((SELECT id FROM purpose_types WHERE name = 'channel'), 'botlogs', 'Logs for Bot Actions'),
+    ((SELECT id FROM purpose_types WHERE name = 'channel'), 'guildlogs', 'Logs for the Server'),
     ((SELECT id FROM purpose_types WHERE name = 'role'), 'member', 'Auto-assigned Member Role'),
     ((SELECT id FROM purpose_types WHERE name = 'role'), 'muted', 'Muted'),
     ((SELECT id FROM purpose_types WHERE name = 'role'), 'mod', 'Moderator'),
@@ -104,7 +105,6 @@ CREATE TABLE IF NOT EXISTS settings_value_types (
     FOREIGN KEY (option_id) REFERENCES settings_options(id) ON DELETE CASCADE
 );
 
-
 -- use these as values, if none are found then it's a string input type
 INSERT OR IGNORE INTO settings_value_types (option_id, name, value) VALUES
     ((SELECT id FROM settings_options WHERE name = "lvl_alert"), "enabled", "1"),
@@ -119,44 +119,9 @@ CREATE TABLE IF NOT EXISTS settings (
     UNIQUE (object_id, option_id) ON CONFLICT REPLACE
 );
 
--- CREATE TABLE IF NOT EXISTS setting_data_types (
---     id INTEGER PRIMARY KEY AUTOINCREMENT,
---     name TEXT NOT NULL UNIQUE
--- );
-
--- INSERT OR IGNORE INTO setting_data_types (name) VALUES
---     ('boolean'),
---     ('integer'),
---     ('string');
-
--- -- Settings
--- -- TODO: rename to config options
--- CREATE TABLE IF NOT EXISTS settings (
---     id INTEGER PRIMARY KEY AUTOINCREMENT,
---     safe_name TEXT NOT NULL UNIQUE,
---     name TEXT NOT NULL,
---     description TEXT
---     --for_user INTEGER NOT NULL  -- 0 = guild, 1 = user
--- );
-
--- -- Add default settings here
--- INSERT OR IGNORE INTO settings (safe_name, name, description) VALUES 
---     ('lvl_alert', 'Level Up Alert', 'Send a message when you level up.');
-
--- -- Table to store the settings
--- -- TODO: rename to config values
--- CREATE TABLE IF NOT EXISTS user_settings (
---     id INTEGER PRIMARY KEY AUTOINCREMENT,
---     user_id INTEGER NOT NULL,
---     setting_id INTEGER NOT NULL,
---     value INTEGER NOT NULL,
---     FOREIGN KEY (setting_id) REFERENCES settings(id) ON DELETE CASCADE,
---     UNIQUE (user_id, setting_id)
--- );
-
 --------------------------------------------------------------------------------
 
--- tickets-#36 - Rewrite tickets system
+-- #36 - Rewrite tickets system
 -- Store user created tickets
 CREATE TABLE IF NOT EXISTS tickets (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -166,4 +131,26 @@ CREATE TABLE IF NOT EXISTS tickets (
     active INTEGER NOT NULL DEFAULT 1,
     timestamp INTEGER NOT NULL,
     FOREIGN KEY (guild_id) REFERENCES guilds(guild_id) ON DELETE CASCADE
-)
+);
+
+-- #76 - Add Reaction Roles
+-- Store Reaction Roles Here
+CREATE TABLE IF NOT EXISTS reaction_roles (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    guild_id INTEGER NOT NULL,
+    message_id INTEGER NOT NULL,
+    emoji TEXT NOT NULL, 
+    role_id INTEGER NOT NULL,
+    FOREIGN KEY (guild_id) REFERENCES guilds(guild_id) ON DELETE CASCADE
+);
+
+-- #77 Write Economy System
+-- Store User Balances Here
+CREATE TABLE IF NOT EXISTS balances (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    guild_id INTEGER NOT NULL,
+    member_id INTEGER NOT NULL,
+    balance INTEGER NOT NULL DEFAULT 0,
+    active INTEGER NOT NULL DEFAULT 1,
+    FOREIGN KEY (guild_id) REFERENCES guilds(guild_id) ON DELETE CASCADE
+);

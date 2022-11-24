@@ -2,6 +2,7 @@
 
 import logging
 from io import BytesIO
+from urllib import parse
 
 import discord
 from discord import (
@@ -24,7 +25,7 @@ class RandomApiCog(BaseCog, name="Random API"):
         description="Random API commands"
     )
 
-    async def _get_image_from_avatar(
+    async def _get_image_from_api(
         self,
         url_path:str,
         user:discord.User,
@@ -52,6 +53,10 @@ class RandomApiCog(BaseCog, name="Random API"):
                 f"{key}={value}" for key, value in kwargs.items()
             )
 
+        url = parse.quote(url, safe=":/?&=")
+
+        log.debug("Making https request to %s", url)
+
         async with aiohttp.ClientSession() as session:
             async with session.get(url) as resp:
                 if resp.status != 200:
@@ -78,9 +83,9 @@ class RandomApiCog(BaseCog, name="Random API"):
         """
 
         await inter.response.defer()
-        await inter.response.send_message(
-            file=await self._get_image_from_avatar(
-                "canvas/stupid", user
+        await inter.followup.send(
+            file=await self._get_image_from_api(
+                "canvas/its-so-stupid", user
             )
         )
 
@@ -112,7 +117,7 @@ class RandomApiCog(BaseCog, name="Random API"):
 
         await inter.response.defer()
         await inter.followup.send(
-            file=await self._get_image_from_avatar(
+            file=await self._get_image_from_api(
                 "canvas/tweet",
                 user,
                 displayname=displayname or user.display_name,
@@ -144,7 +149,7 @@ class RandomApiCog(BaseCog, name="Random API"):
 
         await inter.response.defer()
         await inter.followup.send(
-            file=await self._get_image_from_avatar(
+            file=await self._get_image_from_api(
                 "canvas/youtube-comment",
                 user,
                 comment=comment,
@@ -168,7 +173,7 @@ class RandomApiCog(BaseCog, name="Random API"):
 
         await inter.response.defer()
         await inter.followup.send(
-            file=await self._get_image_from_avatar(
+            file=await self._get_image_from_api(
                 "canvas/simpcard",
                 user
             )
@@ -190,7 +195,7 @@ class RandomApiCog(BaseCog, name="Random API"):
 
         await inter.response.defer()
         await inter.followup.send(
-            file=await self._get_image_from_avatar(
+            file=await self._get_image_from_api(
                 "canvas/horny",
                 user
             )
