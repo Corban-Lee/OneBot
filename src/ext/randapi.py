@@ -2,6 +2,7 @@
 
 import logging
 from io import BytesIO
+from urllib import parse
 
 import discord
 from discord import (
@@ -51,6 +52,10 @@ class RandomApiCog(BaseCog, name="Random API"):
             url += "&" + "&".join(
                 f"{key}={value}" for key, value in kwargs.items()
             )
+
+        url = parse.quote(url, safe=":/?&=")
+
+        log.debug("Making https request to %s", url)
 
         async with aiohttp.ClientSession() as session:
             async with session.get(url) as resp:
