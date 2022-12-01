@@ -1,9 +1,21 @@
 
+body {
+    overflow: overlay;
+}
+
+::-webkit-scrollbar {
+    width: 7px;
+    height: 7px;
+}
+::-webkit-scrollbar-thumb {
+    background: rgba(90, 90, 90, 0.7);
+    border-radius: 20px;
+}
+
 a.learn-more {
     color: #1167e5;
     text-decoration: none!important;
 }
-
 a.learn-more:hover {
     text-decoration: underline!important;
 }
@@ -12,6 +24,12 @@ a.learn-more:hover {
     background-image: url("https://www.transparenttextures.com/patterns/bedge-grunge.png");
 }
 
+.frosted-glass {
+    background-color: rgba(0, 0, 0, .50);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid rgba(0, 0, 0, .05);
+}
 
 .waves {
     position:relative;
@@ -19,13 +37,12 @@ a.learn-more:hover {
     height:15vh;
     min-height:100px;
     max-height:150px;
-    opacity: 0.8;
+    opacity: 1;
   }
 
 .underwater {
-    /* background: linear-gradient(to top, #1f2326, #003f7c); */
-    background-color: #003f7c;
-    opacity: 0.8;
+    background: linear-gradient(to top, #212529, #003f7c);
+    opacity: 1;
 }
 
 .parallax > use {
@@ -47,6 +64,7 @@ a.learn-more:hover {
     animation-delay: -5s;
     animation-duration: 20s;
 }
+
 @keyframes move-forever {
     0% {
         transform: translate3d(-90px,0,0);
@@ -55,10 +73,21 @@ a.learn-more:hover {
         transform: translate3d(85px,0,0);
     }
 }
+
 /*Shrinking for mobile*/
 @media (max-width: 768px) {
     .waves {
         height:40px;
         min-height:40px;
+    }
+}
+
+.floating-hover {
+    transition: all .7s;
+}
+
+@media (min-width: 768px) {
+    .floating-hover:hover {
+        transform: translateY(-5px);
     }
 }

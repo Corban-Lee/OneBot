@@ -20,12 +20,9 @@
                 font-family: 'Aquawax Medium Trial';
                 src: url("{{ url_for('static', filename='fonts/Aquawax Medium Trial.ttf') }}");
             }
-            body {
-                font-family: 'Aquawax Light Trial';
-            }
         </style>
     </head>
-    <body class="text-light bg-dark">
+    <body class="text-light bg-dark" style="font-family: 'Aquawax Light Trial';">
         <div class="modal fade" id="exampleModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
             <div class="modal-dialog modal-dialog-centered">
                 <div class="modal-content text-light bg-dark">
@@ -48,9 +45,9 @@
                 <button class="navbar-toggler rounded-4" type="button" data-bs-toggle="offcanvas" data-bs-target="#offcanvasNavbar" aria-controls="offcanvasNavbar">
                     <span class="navbar-toggler-icon"></span>
                 </button>
-                <div class="offcanvas offcanvas-start text-light bg-dark" tabindex="-1" id="offcanvasNavbar" aria-labelledby="offcanvasNavbarLabel">
+                <div class="offcanvas offcanvas-start text-light bg-dark border-0 bg-opacity-75 frosted-glass" tabindex="-1" id="offcanvasNavbar" aria-labelledby="offcanvasNavbarLabel">
                     <div class="offcanvas-header">
-                        <h5 class="offcanvas-title" id="offcanvasNavbarLabel">OneBot Dashboard</h5>
+                        <h5 class="offcanvas-title" style="font-family: 'Aquawax Medium Trial';" id="offcanvasNavbarLabel">XordK's OneBot</h5>
                         <button type="button" class="btn-close text-reset btn-close-white" data-bs-dismiss="offcanvas" aria-label="Close"></button>
                     </div>
                     <hr class="mx-3">
@@ -87,7 +84,7 @@
                                 </a>
                             </li>
                             <li class="nav-item">
-                                <button class="nav-link bg-dark border-0" data-bs-toggle="modal" data-bs-target="#exampleModal">
+                                <button class="nav-link border-0" style="background: none;" data-bs-toggle="modal" data-bs-target="#exampleModal">
                                     <i class="bi bi-clipboard-data me-2"></i>
                                     Provide Feedback
                                 </button>
@@ -99,11 +96,14 @@
                                 </a>
                             </li>
                             <li class="nav-item">
-                                <span class="navbar-text text-dark" href="#">evie wuz here</span>
+                                <span class="navbar-text text-dark opacity-75" href="#">evie wuz here</span>
                             </li>
                             {% if not user %}
                                 <li class="nav-item">
-                                    <a class="btn btn-primary rounded-4 px-5 px-sm-4" href="/login">Login to Discord</a>
+                                    <a class="btn btn-primary rounded-4 px-5 px-sm-4" href="/login">
+                                        <i class="bi bi-discord me-1"></i>
+                                        Connect to Discord
+                                    </a>
                                 </li>
                             {% endif %}
                         </ul>

@@ -3,14 +3,12 @@
 {% block head %}
 <title>OneBot - Home Page</title>
 <style>
-    body {
-        background-color: #003f7c!important;
-    }
+    
 </style>
 {% endblock %}
 
 {% block breadcrumbs %}
-<div class="pt-5 text-light" style="background: linear-gradient(to top, #1f2326, #33393d);">
+<div class="pt-5 text-light" style="background: linear-gradient(to top, #212529, #3c3f42e8);">
     <div class="container">
         <h1 class="text-center my-5" style="font-family: 'Aquawax Medium Trial'; font-size: 5em;">XordK's OneBot</h1>
     </div>
@@ -32,8 +30,36 @@
 <div class="underwater pt-5 vh-100">
     <div class="container">
         <div class="row">
+            <div class="col-9">
+                <span class="d-flex justify-content-start">
+                    <a class="frosted-glass rounded-3 me-4 p-2 text-light" href="https://github.com/XordK/OneBot">
+                        <i class="bi bi-code-slash fs-4"></i>
+                    </a>
+                </span>
+            </div>
+            <div class="col-3">
+                <div class="d-flex justify-content-end">
+                    <a class="frosted-glass rounded-3 ms-2 p-2 shadow text-light" href="https://github.com/XordK">
+                        <i class="bi bi-github fs-4"></i>
+                    </a>
+                    <a class="frosted-glass rounded-3 ms-2 p-2 shadow text-light" href="https://discord.gg/2jHTbWw98z">
+                        <i class="bi bi-discord fs-4"></i>
+                    </a>
+                    <a class="frosted-glass rounded-3 ms-2 p-2 shadow text-light" href="https://www.linkedin.com/in/corban-lee-jones-87872b257/">
+                        <i class="bi bi-linkedin fs-4"></i>
+                    </a>
+                    <a class="frosted-glass rounded-3 ms-2 p-2 shadow text-light" href="https://stackoverflow.com/users/13989809/xord">
+                        <i class="bi bi-stack-overflow fs-4"></i>
+                    </a>
+                </div>
+            </div>
+            <span class="container">
+                <hr>
+            </span>
+        </div>
+        <div class="row mt-4">
             <div class="col-lg-6 mb-4">
-                <div class="bg-black bg-opacity-25 rounded-4 p-4 shadow h-100">
+                <div class="rounded-4 p-4 shadow h-100 frosted-glass floating-hover">
                     <div class="row">
                         <div class="col-md-3 col-lg-4 d-flex justify-content-center align-items-center">
                             <img src="{{ url_for('static', filename='images/task.png') }}">
@@ -47,7 +73,7 @@
                 </div>
             </div>
             <div class="col-lg-6 mb-4">
-                <div class="bg-black bg-opacity-25 rounded-4 p-4 shadow h-100">
+                <div class="rounded-4 p-4 shadow h-100 frosted-glass floating-hover">
                     <div class="row">
                         <div class="col-md-3 col-lg-4 d-flex justify-content-center align-items-center">
                             <img src="{{ url_for('static', filename='images/medal.png') }}">
@@ -61,7 +87,7 @@
                 </div>
             </div>
             <div class="col-lg-6 mb-4">
-                <div class="bg-black bg-opacity-25 rounded-4 p-4 shadow h-100">
+                <div class="rounded-4 p-4 shadow h-100 frosted-glass floating-hover">
                     <div class="row">
                         <div class="col-md-3 col-lg-4 d-flex justify-content-center align-items-center">
                             <img src="{{ url_for('static', filename='images/cash.png') }}">
@@ -75,7 +101,7 @@
                 </div>
             </div>
             <div class="col-lg-6 mb-4">
-                <div class="bg-black bg-opacity-25 rounded-4 p-4 shadow h-100">
+                <div class="rounded-4 p-4 shadow h-100 frosted-glass floating-hover">
                     <div class="row h-100">
                         <div class="col-md-3 col-lg-4 d-flex justify-content-center align-items-center">
                             <img src="{{ url_for('static', filename='images/music.png') }}">
@@ -89,23 +115,54 @@
                 </div>
             </div>
         </div>
-            <div class="row py-5">
-                <div class="col-md-6">
-                    <h2>Add me to your server</h2>
-                    <p class="text-secondary">Connect OneBot to your server with the click of a button</p>
-                    <a class="btn btn-primary shadow">
-                        <i class="bi bi-discord me-1"></i>
-                        Add OneBot
-                    </a>
-                </div>
-                <div class="col-md-6">
-                    <h2>Connect your account</h2>
-                    <p class="text-secondary">Connect your discord account and gain access to all of our utilities</p>
-                    <a class="btn btn-primary shadow">
-                        <i class="bi bi-discord me-1"></i>
-                        Connect to discord
-                    </a>
-                </div>
+        <hr>
+        <div class="row pt-5 text-center">
+            <div class="col-md-6 mb-5">
+                <h2>Add me to your server</h2>
+                <p class="text-secondary">Connect OneBot to your server with the click of a button</p>
+                <a class="btn btn-primary rounded-4 shadow">
+                    <i class="bi bi-discord me-1"></i>
+                    Add OneBot
+                </a>
+            </div>
+            <div class="col-md-6 mb-5">
+                <h2>Connect your account</h2>
+                <p class="text-secondary">Connect your discord account and gain access to all of our utilities</p>
+                <a class="btn btn-primary rounded-4 shadow">
+                    <i class="bi bi-discord me-1"></i>
+                    Connect to Discord
+                </a>
+            </div>
+        </div>
+        <div class="row py-5">
+            <div class="col-12 text-center">
+                <h2>OneBot is a free and open source discord bot</h2>
+                <p class="text-secondary">OneBot is a free and open source discord bot that is constantly being updated with new features</p>
+                <p class="text-secondary">Check out some of the servers where you can find OneBot</p>
+            </div>
+            <div class="col-sm-12 col-md-6 col-lg-2 mx-auto">
+                <a class="text-decoration-none text-light" href="https://discord.com/channels/">
+                    <div class="m-3 rounded-circle text-center">
+                        <img src="" alt="server icon" class="rounded-circle">
+                        <h6 class="mt-2">Server Name 1</h6>
+                    </div>
+                </a>
+            </div>
+            <div class="col-sm-12 col-md-6 col-lg-2 mx-auto">
+                <a class="text-decoration-none text-light" href="https://discord.com/channels/">
+                    <div class="m-3 rounded-circle text-center">
+                        <img src="" alt="server icon" class="rounded-circle">
+                        <h6 class="mt-2">Server Name 2</h6>
+                    </div>
+                </a>
+            </div>
+            <div class="col-sm-12 col-md-6 col-lg-2 mx-auto">
+                <a class="text-decoration-none text-light" href="https://discord.com/channels/">
+                    <div class="m-3 rounded-circle text-center">
+                        <img src="" alt="server icon" class="rounded-circle">
+                        <h6 class="mt-2">Server Name 3</h6>
+                    </div>
+                </a>
             </div>
         </div>
     </div>
