@@ -172,7 +172,7 @@ class YTDLSource(discord.PCMVolumeTransformer):
                 raise YTDLError(
                     f"Couldn't find anything that matches `{search}`"
                 )
-
+        
         log.debug("Processing info for %s", search)
 
         webpage_url = process_info['webpage_url']
@@ -212,6 +212,7 @@ class YTDLSource(discord.PCMVolumeTransformer):
             data=info
         )
 
+
     @property
     def parsed_duration(self) -> str:
         """Parses the duration of a song"""
@@ -248,7 +249,6 @@ class Song:
 
         self.source = source
         self.requester = source.requester
-
 
 class SongQueue(asyncio.Queue):
     """Queue that holds songs"""
@@ -766,6 +766,70 @@ class MusicCog(BaseCog, name="New Music"):
             return await inter.followup.send(embed=embed, view=view)
 
         await inter.followup.send(MUSIC_ADDEDPLAYSOON)
+
+    async def music_playback(self, inter, search):
+        voice_state = self.get_voice_state(inter)
+
+        # Join the voice channel if the bot is not already in one
+        if not inter.guild.voice_client:
+            await self.join_vc(inter)
+
+        # This may take a while, defer to prevent timeout
+        await inter.response.defer()
+
+        # Create a source from the search query
+        source = await YTDLSource.create_source(
+            inter, search, loop=self.bot.loop
+        )
+
+        # Add the source to the queue as a Song
+        song = Song(source)
+        await voice_state.queue.put(song)
+
+        # if the song is the only one in the queue, another embed
+        # will be sent when the song starts playing, so don't clutter
+        # the chat with this embed also.
+        if voice_state.is_playing:
+            embed = AddedTrackEmbed(
+                song=song,
+                voice_state=voice_state
+            )
+            view = TrackAddedView(song, voice_state)
+            return await inter.followup.send(embed=embed, view=view)
+
+        await inter.followup.send(MUSIC_ADDEDPLAYSOON)
+
+    @group.command(name="rickroll")
+    @app_commands.check(check_member_in_vc)
+    async def rickroll(self, inter:Inter):
+        """Does Nothing"""
+
+        await self.music_playback(inter, search="https://www.youtube.com/watch?v=dQw4w9WgXcQ")
+
+
+    @group.command(name="iamabadperson")
+    @app_commands.check(check_member_in_vc)
+    async def iamabadperson(self, inter:Inter):
+        """You are a bad person"""
+
+        await self.music_playback(inter, search="https://www.youtube.com/watch?v=aAkMkVFwAoo")
+
+    @group.command(name="2010youtube")
+    @app_commands.check(check_member_in_vc)
+    async def old_youtube(self, inter:Inter):
+        """Experience Nostalgia"""
+
+        await self.music_playback(inter, search="https://www.youtube.com/watch?v=Cm0qaXi9THA")
+    
+    @group.command(name="deadmeme")
+    @app_commands.check(check_member_in_vc)
+    async def deadmeme(self, inter:Inter):
+        """How was this funny"""
+
+        await self.music_playback(inter, search="https://www.youtube.com/watch?v=LBnUc09MK2w")
+
+    
+
 
 
 async def setup(bot):

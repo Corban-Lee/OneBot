@@ -7,7 +7,7 @@ from bot import Bot
 
 # Parse command line arguments
 parser = argparse.ArgumentParser(
-    prog="OneBot",
+    prog="OnePlayer",
     description="A Discord bot for the OneBot project."
 )
 parser.add_argument(

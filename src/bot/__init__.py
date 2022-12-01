@@ -15,7 +15,6 @@ from db.enums import ChannelPurposes
 from ui import ManageTicketView
 from ._get import Get
 from ._logs import setup_logs
-from ._ext import CogManager
 
 
 log = logging.getLogger(__name__)
@@ -231,11 +230,6 @@ class Bot(commands.Bot):
 
     async def load_extensions(self):
         """Searches through the ./ext/ directory and loads them"""
-
-        # The cog manager is loaded seperately so that it can not be
-        # unloaded because it is used to unload other cogs.
-        cog_manager = CogManager(self)
-        await self.add_cog(cog_manager)
 
         log.info('Loading extensions')
 
