@@ -1,0 +1,40 @@
+{% extends "base.html" %}
+
+{% block head %}
+<title>OneBot - My Servers</title>
+{% endblock %}
+
+{% block content %}
+<div class="container pt-5">
+    <div>
+        <h1>My Servers</h1>
+        <h3>Welcome back {{ user }}</h3>
+    </div>
+    <div class="row pt-5">
+        <div class="d-flex justify-content-between align-items-center flex-wrap">
+            <h5 class="">Your Servers</h5>
+            <div class="d-flex flex-wrap align-items-center">
+                <span>Filter</span>
+                <form method="post" class="m-3">
+                    <select class="form-control rounded-3">
+                        <option value="alpha">Alphabetical</option>
+                        <option value="owned">Onwned</option>
+                        <option value="members">Most Members</option>
+                    </select>
+                </form>
+            </div>
+        </div>
+        <hr>
+        {% for guild in guilds %}
+            <div class="col-sm-12 col-md-6 col-lg-2">
+                <a class="text-decoration-none text-light" href="https://discord.com/channels/{{ guild.id }}">
+                    <div class="m-3 rounded-circle text-center">
+                        <img src="{{ guild.icon_url }}" alt="{{ guild.name }} server icon" class="rounded-circle">
+                        <h6 class="mt-2">{{ guild.name[:20] }}</h6>
+                    </div>
+                </a>
+            </div>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}
