@@ -1,9 +1,12 @@
 """Entry point for the bot, run this file to get things started."""
 
+import json
 import asyncio
 import argparse
+import multiprocessing
 
 from bot import Bot
+from dashboard import DashboardApp
 
 # Parse command line arguments
 parser = argparse.ArgumentParser(
@@ -11,14 +14,14 @@ parser = argparse.ArgumentParser(
     description="A Discord bot for the OneBot project."
 )
 parser.add_argument(
-    "-t", "--token",
-    help="The bot token to use for authentication.",
-    required=False,
-    type=str
-)
-parser.add_argument(
     "-d", "--debug",
     help="Run the bot in debug mode.",
+    required=False,
+    action="store_true"
+)
+parser.add_argument(
+    "-w", "--website-only",
+    help="Run the dashboard website only.",
     required=False,
     action="store_true"
 )
@@ -28,16 +31,37 @@ async def main():
 
     args = parser.parse_args()
 
-    if args.token is None:
-        # NOTE: You will need to create this file if it
-        # doesn't exist and paste your bot token in it.
-        with open('TOKEN', 'r', encoding='utf-8') as file:
-            token = file.read()
-    else:
-        token = args.token
+    with open("client.json", "r", encoding="utf-8") as file:
+        client_data = json.load(file)
+    # client_data = json.load("client.json")
+
+    token = client_data["token"]
 
     # Construct the bot, load the extensions and start it up!
     async with Bot(debug=args.debug) as bot:
+
+        webapp = DashboardApp(
+            token=token,
+            bot=bot,
+            client_data=client_data,
+        )
+
+        webapp_kwargs = {
+            "debug": True,
+            "host": "localhost",
+            "port": 5000
+        }
+
+        webapp_process = multiprocessing.Process(
+            target=webapp.run,
+            kwargs=webapp_kwargs,
+            daemon=False
+        )
+
+        webapp_process.start()
+        if args.website_only:
+            await asyncio.Event().wait() # wait forever, until keyboard interrupt
+
         await bot.load_extensions()
         await bot.start(token, reconnect=True)
 

@@ -54,7 +54,7 @@ class Bot(commands.Bot):
         # Event that can be used to await for all cogs to be loaded
         self.all_cogs_loaded = asyncio.Event()
         self.cog_events = {}
- 
+
     @tasks.loop(minutes=10)
     async def _autosave_db(self):
         """Autosave the database"""

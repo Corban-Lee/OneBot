@@ -6,3 +6,6 @@ youtube_dl==2021.12.17
 httpx==0.23.0
 pynacl==1.5.0
 pyjokes==0.6.0
+quart==0.18.3
+quart_discord==2.1.4
+django==4.1.3

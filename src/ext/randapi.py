@@ -30,7 +30,7 @@ class RandomApiCog(BaseCog, name="Random API"):
         url_path:str,
         user:discord.User,
         **kwargs
-    ):
+    ) -> discord.File:
         """Get a random api image from a user's avatar
 
         Args:
@@ -42,12 +42,15 @@ class RandomApiCog(BaseCog, name="Random API"):
             discord.HTTPException: If the request failed
         """
 
+        # If the user has no avatar, use the default avatar
+        avatar = user.avatar or user.default_avatar
+
         url = (
             f"https://some-random-api.ml/{url_path}?avatar"
-            f"={user.avatar.with_format('png').url}"
+            f"={avatar.with_format('png').url}"
         )
 
-        # Add any extra kwargs to the url
+        # Add any extra params to the url
         if kwargs:
             url += "&" + "&".join(
                 f"{key}={value}" for key, value in kwargs.items()
@@ -65,28 +68,11 @@ class RandomApiCog(BaseCog, name="Random API"):
                         message=f"Request failed with status code {resp.status}"
                     )
 
-                data = await resp.read()
+                image_bytes = await resp.read()
 
         return discord.File(
-            BytesIO(data),
+            BytesIO(image_bytes),
             filename=f"{user.name}.png"
-        )
-
-    @group.command(name="stupid")
-    @app_commands.checks.cooldown(3, 120)
-    async def stupid(self, inter:Inter, user:discord.User):
-        """Create a stupid image from a user avater
-
-        Args:
-            inter (Inter): The interaction object
-            user (discord.User): The user to get the avatar from
-        """
-
-        await inter.response.defer()
-        await inter.followup.send(
-            file=await self._get_image_from_api(
-                "canvas/its-so-stupid", user
-            )
         )
 
     @group.command(name="tweet")
@@ -114,6 +100,8 @@ class RandomApiCog(BaseCog, name="Random API"):
             replies (int, optional): The number of replies to put on the tweet
             retweets (int, optional): The number of retweets to put on the tweet
         """
+
+        log.debug("Creating tweet image of %s", user)
 
         await inter.response.defer()
         await inter.followup.send(
@@ -147,6 +135,8 @@ class RandomApiCog(BaseCog, name="Random API"):
             comment (str, optional): The comment to put on the comment
         """
 
+        log.debug("Creating youtube comment image for %s", user)
+
         await inter.response.defer()
         await inter.followup.send(
             file=await self._get_image_from_api(
@@ -171,6 +161,8 @@ class RandomApiCog(BaseCog, name="Random API"):
             user (discord.User): The user to get the avatar from
         """
 
+        log.debug("Creating simp card for %s", user)
+
         await inter.response.defer()
         await inter.followup.send(
             file=await self._get_image_from_api(
@@ -179,7 +171,7 @@ class RandomApiCog(BaseCog, name="Random API"):
             )
         )
 
-    @group.command(name="horny-card")
+    @group.command(name="horny-license")
     @app_commands.checks.cooldown(3, 120)
     async def horny_card(
         self,
@@ -192,6 +184,8 @@ class RandomApiCog(BaseCog, name="Random API"):
             inter (Inter): The interaction object
             user (discord.User): The user to get the avatar from
         """
+
+        log.debug("Making horny license request for %s", user)
 
         await inter.response.defer()
         await inter.followup.send(

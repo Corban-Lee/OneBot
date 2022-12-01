@@ -8,6 +8,13 @@ ACTIVITY_MSG = 'I am up and running!'
 DATE_FORMAT = '%d/%m/%Y'
 DATETIME_FORMAT = "%d/%m/%Y %H:%M:%S"
 
+# Database constants
+DB_PATH = './data/db/db.sqlite3'
+BUILD_PATH = './data/db/build.sql'
+
+# Webapp constants
+STATIC_PATH = './src/webapp/static'
+
 # PronounDB constants
 PRONOUNDB_GET_URL = "https://pronoundb.org/api/v1/lookup"
 PRONOUNDB_LOGIN_URL = "https://pronoundb.org/login/"
