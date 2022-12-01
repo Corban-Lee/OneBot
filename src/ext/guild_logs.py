@@ -7,7 +7,6 @@ from discord.ext import commands, tasks
 from db import db
 from db.enums import ChannelPurposes
 from ui import (
-    LogNewMessage,
     LogEditedMessage,
     LogDeletedMessage,
     LogNewMember,

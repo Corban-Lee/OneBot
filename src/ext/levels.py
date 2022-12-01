@@ -169,77 +169,120 @@ class LevelCog(BaseCog, name='Level Progression'):
             log.debug("Validated %s members for %s", i, guild.name)
 
     @app_commands.command(name="scoreboard")
+    @app_commands.choices(style=[
+        app_commands.Choice(name="Icons", value="icons"),
+        app_commands.Choice(name="Grid", value="grid"),
+        app_commands.Choice(name="Text", value="text")
+    ])
     async def scoreboard_cmd(
         self,
-        inter:Inter,
-        length:int=6
-        ):
-        """Get a scoreboard of members ordered by rank
+        inter: Inter,
+        style: app_commands.Choice[str]
+    ):
+        """Command to get the scoreboard for the current guild
 
         Args:
             inter (Inter): The interaction object
-            length (int): The amount of members to show
+            style (app_commands.Choice[str]): The style of the scoreboard
         """
 
-        log.debug("Scoreboard command triggered")
+        log.debug("Scoreboard command triggered by %s", inter.user)
 
-        # Validate the length range[3, 30]
-        if length not in range(3, 31):
-            log.debug("Invalid length, sending error message")
-            await inter.response.send_message(
-                "Length must be between 3 and 30",
-                ephemeral=True
-            )
-            return
 
-        log.debug("Gathering member level data")
+        match style.value:
 
-        # Create a list of tuples containing a member object
-        # and their level object
-        members = [
-            (
-                await self.bot.get.member(member_id, inter.guild.id),
-                MemberLevelModel(member_id, inter.guild.id, xp)
-            )
-            for member_id, xp in db.records(
-                "SELECT member_id, experience FROM member_levels "
-                "WHERE guild_id=? ORDER BY experience DESC LIMIT ?",
-                inter.guild.id, length
-            )
-        ]
+            case "icons":
+                await inter.response.send_message(
+                    file=await ScoreBoard.from_interaction(inter).get_icons()
+                )
 
-        log.debug("Estimating the time to complete")
+            case "grid":
+                await inter.response.send_message(
+                    file=await ScoreBoard.from_interaction(inter).get_grid()
+                )
 
-        # Display the estimated time to finish drawing the scoreboard
-        est_finish_dt = datetime.now() + timedelta(seconds=len(members)*3)
-        est = int(est_finish_dt.timestamp())
-        await inter.response.send_message(
-            content="Drawing scoreboard..."
-            f"\nEstimated time: <t:{est}:R>"
-        )
+            case "text":
+                await inter.response.send_message(
+                    await ScoreBoard.from_interaction(inter).get_text()
+                )
 
-        log.debug("Creating & Drawing scoreboard")
+            case _:
+                await inter.response.send_message(
+                    "Invalid style given", ephemeral=True
+                )
 
-        scoreboard = ScoreBoard(members)
-        await scoreboard.draw()  # This will take a while
+    # @app_commands.command(name="scoreboard")
+    # async def scoreboard_cmd(
+    #     self,
+    #     inter:Inter,
+    #     length:int=6
+    #     ):
+    #     """Get a scoreboard of members ordered by rank
 
-        # Let the user know that progress is being made
-        await inter.edit_original_response(
-            content="Scoreboard created!\nMaking a "
-            "file of it now, this may take a moment..."
-        )
+    #     Args:
+    #         inter (Inter): The interaction object
+    #         length (int): The amount of members to show
+    #     """
 
-        log.debug("Making scoreboard file")
+    #     log.debug("Scoreboard command triggered")
 
-        # Create a discord file object from the scoreboard
-        file = scoreboard.get_file()  # This can take a while
+    #     # Validate the length range[3, 30]
+    #     if length not in range(3, 31):
+    #         log.debug("Invalid length, sending error message")
+    #         await inter.response.send_message(
+    #             "Length must be between 3 and 30",
+    #             ephemeral=True
+    #         )
+    #         return
 
-        # Now that we are done drawing, send the file
-        await inter.edit_original_response(
-            attachments=(file,),
-            content=f"**{inter.guild} | Showing {len(members)} "
-                f"of {inter.guild.member_count} members**"
-        )
+    #     log.debug("Gathering member level data")
+
+    #     # Create a list of tuples containing a member object
+    #     # and their level object
+    #     members = [
+    #         (
+    #             await self.bot.get.member(member_id, inter.guild.id),
+    #             MemberLevelModel(member_id, inter.guild.id, xp)
+    #         )
+    #         for member_id, xp in db.records(
+    #             "SELECT member_id, experience FROM member_levels "
+    #             "WHERE guild_id=? ORDER BY experience DESC LIMIT ?",
+    #             inter.guild.id, length
+    #         )
+    #     ]
+
+    #     log.debug("Estimating the time to complete")
+
+    #     # Display the estimated time to finish drawing the scoreboard
+    #     est_finish_dt = datetime.now() + timedelta(seconds=len(members)*3)
+    #     est = int(est_finish_dt.timestamp())
+    #     await inter.response.send_message(
+    #         content="Drawing scoreboard..."
+    #         f"\nEstimated time: <t:{est}:R>"
+    #     )
+
+    #     log.debug("Creating & Drawing scoreboard")
+
+    #     scoreboard = ScoreBoard(members)
+    #     await scoreboard.draw()  # This will take a while
+
+    #     # Let the user know that progress is being made
+    #     await inter.edit_original_response(
+    #         content="Scoreboard created!\nMaking a "
+    #         "file of it now, this may take a moment..."
+    #     )
+
+    #     log.debug("Making scoreboard file")
+
+    #     # Create a discord file object from the scoreboard
+    #     file = scoreboard.get_file()  # This can take a while
+
+    #     # Now that we are done drawing, send the file
+    #     await inter.edit_original_response(
+    #         attachments=(file,),
+    #         content=f"**{inter.guild} | Showing {len(members)} "
+    #             f"of {inter.guild.member_count} members**"
+    #     )
 
     async def send_levelboard(
         self,

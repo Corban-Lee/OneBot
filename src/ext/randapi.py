@@ -30,7 +30,7 @@ class RandomApiCog(BaseCog, name="Random API"):
         url_path:str,
         user:discord.User,
         **kwargs
-    ):
+    ) -> discord.File:
         """Get a random api image from a user's avatar
 
         Args:
@@ -50,7 +50,7 @@ class RandomApiCog(BaseCog, name="Random API"):
             f"={avatar.with_format('png').url}"
         )
 
-        # Add any extra kwargs to the url
+        # Add any extra params to the url
         if kwargs:
             url += "&" + "&".join(
                 f"{key}={value}" for key, value in kwargs.items()
@@ -68,10 +68,10 @@ class RandomApiCog(BaseCog, name="Random API"):
                         message=f"Request failed with status code {resp.status}"
                     )
 
-                data = await resp.read()
+                image_bytes = await resp.read()
 
         return discord.File(
-            BytesIO(data),
+            BytesIO(image_bytes),
             filename=f"{user.name}.png"
         )
 

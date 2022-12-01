@@ -18,7 +18,7 @@ log = logging.getLogger(__name__)
 user_settings = [
     app_commands.Choice(name=name, value=_id)
     for _id, name in db.records(
-        "SELECT id, name FROM settings_options "
+        "SELECT id, description FROM settings_options "
         "WHERE is_guild_setting = 0"
     )
 ]
@@ -26,7 +26,7 @@ user_settings = [
 guild_settings = [
     app_commands.Choice(name=name, value=_id)
     for _id, name in db.records(
-        "SELECT id, name FROM settings_options "
+        "SELECT id, description FROM settings_options "
         "WHERE is_guild_setting = 1"
     )
 ]

@@ -56,12 +56,12 @@ CREATE TABLE IF NOT EXISTS purposes (
 
 -- Add the default purposes
 INSERT OR IGNORE INTO purposes (purpose_type_id, name, description) VALUES 
-    ((SELECT id FROM purpose_types WHERE name = 'category'), 'tickets', 'Designated For Tickets'),
-    ((SELECT id FROM purpose_types WHERE name = 'channel'), 'general', 'General Chat'),
-    ((SELECT id FROM purpose_types WHERE name = 'channel'), 'announcements', 'Server Annoucements'),
-    ((SELECT id FROM purpose_types WHERE name = 'channel'), 'rules', 'Server Rules'),
-    ((SELECT id FROM purpose_types WHERE name = 'channel'), 'welcome', 'Member Join Notifications'),
-    ((SELECT id FROM purpose_types WHERE name = 'channel'), 'goodbye', 'Member Leave Notifications'),
+    ((SELECT id FROM purpose_types WHERE name = 'category'), 'tickets', 'Ticket channels are created here'),
+    ((SELECT id FROM purpose_types WHERE name = 'channel'), 'general', 'The general conversation channel'),
+    ((SELECT id FROM purpose_types WHERE name = 'channel'), 'announcements', 'Location to find server announcements'),
+    ((SELECT id FROM purpose_types WHERE name = 'channel'), 'rules', 'Location to find server rules'),
+    ((SELECT id FROM purpose_types WHERE name = 'channel'), 'welcome', 'Send "member joinged" notifications here'),
+    ((SELECT id FROM purpose_types WHERE name = 'channel'), 'goodbye', 'Send "member left" notifications here'),
     ((SELECT id FROM purpose_types WHERE name = 'channel'), 'botlogs', 'Logs for Bot Actions'),
     ((SELECT id FROM purpose_types WHERE name = 'channel'), 'guildlogs', 'Logs for the Server'),
     ((SELECT id FROM purpose_types WHERE name = 'role'), 'member', 'Auto-assigned Member Role'),
@@ -69,7 +69,7 @@ INSERT OR IGNORE INTO purposes (purpose_type_id, name, description) VALUES
     ((SELECT id FROM purpose_types WHERE name = 'role'), 'mod', 'Moderator'),
     ((SELECT id FROM purpose_types WHERE name = 'role'), 'admin', 'Administrator'),
     ((SELECT id FROM purpose_types WHERE name = 'role'), 'owner', 'Server Owner'),
-    ((SELECT id FROM purpose_types WHERE name = 'role'), 'birthday', 'Birthday Today');
+    ((SELECT id FROM purpose_types WHERE name = 'role'), 'birthday', "Signifies a user's birthday");
 
 -- Table to store the purpose of a discord object
 CREATE TABLE IF NOT EXISTS purposed_objects (
@@ -84,37 +84,44 @@ CREATE TABLE IF NOT EXISTS purposed_objects (
 
 -- Settings --------------------------------------------------------------------
 
+-- Table to store settings (not settings values)
 CREATE TABLE IF NOT EXISTS settings_options (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     name TEXT NOT NULL UNIQUE,
     description TEXT NOT NULL,
-    default_value TEXT NOT NULL,
+    default_text_value TEXT NOT NULL,
+    default_int_value INTEGER NOT NULL,
     is_guild_setting INTEGER NOT NULL DEFAULT 0
 );
 
-INSERT OR IGNORE INTO settings_options (name, description, default_value, is_guild_setting) VALUES
-    ("lvl_alert", "Level Up Alert", "1", 0),
-    ("join_msg", "Member Join Message", "Welcome to the server!", 1),
-    ("leave_msg", "Member Leave Message", "Goodbye!", 1);
+-- Insert the settings options
+INSERT OR IGNORE INTO settings_options (name, description, default_text_value, default_int_value, is_guild_setting) VALUES
+    ("lvl_alert", "Level Up Alert", "", 1, 0),
+    ("join_msg", "Member join notifications message", "Welcome to the server!", "", 1),
+    ("leave_msg", "Member left notifications message", "Goodbye!", "", 1),
+    ("hide_bot_cmd", "Hide bot commands outside bot channels", "", 0, 1);
 
+-- Alternative names for settings option values
 CREATE TABLE IF NOT EXISTS settings_value_types (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     option_id INTEGER NOT NULL,
     name TEXT NOT NULL UNIQUE,
-    value TEXT NOT NULL,
+    text_value TEXT NOT NULL,
+    int_value INT NOT NULL,
     FOREIGN KEY (option_id) REFERENCES settings_options(id) ON DELETE CASCADE
 );
 
 -- use these as values, if none are found then it's a string input type
-INSERT OR IGNORE INTO settings_value_types (option_id, name, value) VALUES
-    ((SELECT id FROM settings_options WHERE name = "lvl_alert"), "enabled", "1"),
-    ((SELECT id FROM settings_options WHERE name = "lvl_alert"), "disabled", "0");
+INSERT OR IGNORE INTO settings_value_types (option_id, name, text_value, int_value) VALUES
+    ((SELECT id FROM settings_options WHERE name = "lvl_alert"), "enabled", "", 1),
+    ((SELECT id FROM settings_options WHERE name = "lvl_alert"), "disabled", "", 0);
 
 CREATE TABLE IF NOT EXISTS settings (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     object_id INTEGER NOT NULL UNIQUE, -- Guild ID or User ID
     option_id INTEGER NOT NULL,
-    value TEXT NOT NULL,
+    text_value TEXT NOT NULL,
+    int_value INTEGER NOT NULL,
     FOREIGN KEY (option_id) REFERENCES settings_options(id) ON DELETE CASCADE,
     UNIQUE (object_id, option_id) ON CONFLICT REPLACE
 );
