@@ -426,6 +426,6 @@ class LevelCog(BaseCog, name='Level Progression'):
 
 async def setup(bot):
     """Setup function for the cog"""
-
-    cog = LevelCog(bot)
-    await bot.add_cog(cog)
+    pass
+    # cog = LevelCog(bot)
+    # await bot.add_cog(cog)
