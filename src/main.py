@@ -40,27 +40,27 @@ async def main():
     # Construct the bot, load the extensions and start it up!
     async with Bot(debug=args.debug) as bot:
 
-        webapp = DashboardApp(
-            token=token,
-            bot=bot,
-            client_data=client_data,
-        )
+        # webapp = DashboardApp(
+        #     token=token,
+        #     bot=bot,
+        #     client_data=client_data,
+        # )
 
-        webapp_kwargs = {
-            "debug": True,
-            "host": "localhost",
-            "port": 5000
-        }
+        # webapp_kwargs = {
+        #     "debug": True,
+        #     "host": "localhost",
+        #     "port": 5000
+        # }
 
-        webapp_process = multiprocessing.Process(
-            target=webapp.run,
-            kwargs=webapp_kwargs,
-            daemon=False
-        )
+        # webapp_process = multiprocessing.Process(
+        #     target=webapp.run,
+        #     kwargs=webapp_kwargs,
+        #     daemon=False
+        # )
 
-        webapp_process.start()
-        if args.website_only:
-            await asyncio.Event().wait() # wait forever, until keyboard interrupt
+        # webapp_process.start()
+        # if args.website_only:
+        #     await asyncio.Event().wait() # wait forever, until keyboard interrupt
 
         await bot.load_extensions()
         await bot.start(token, reconnect=True)
