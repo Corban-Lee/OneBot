@@ -122,9 +122,15 @@ class GuildLogs(BaseCog, name="Guild Logs"):
 
         log.debug("message edited")
 
+        # We ignore messages with this content because if falsely triggers this method
+        bad_content = [
+            'https://tenor.com/view/',
+            'https://discordapp.com/emojis/'
+        ]
+
         if (
-            before.guild.id not in self.guild_log_channels
-            or before.author.bot
+            before.guild.id not in self.guild_log_channels or before.author.bot
+            or any(content in before.content for content in bad_content)
         ):
             return
 
